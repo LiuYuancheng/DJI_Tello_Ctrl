@@ -22,7 +22,7 @@ import platform
 
 import telloGlobal as gv
 
-IN_CMD_LIST = ['command', 'takeoff', 'land']
+IN_CMD_LIST = ['command', 'takeoff', 'land', 'streamon', 'streamoff']
 YA_CMD_LIST = ['up', 'down', 'cw', 'ccw']
 XA_CMD_LIST = ['forward', 'back', 'left', 'right']
 
