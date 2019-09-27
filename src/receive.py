@@ -2,7 +2,7 @@ import cv2
 import time
 
 LOCAL_IP = '192.168.10.2'
-LOCAL_PORT_VIDEO = '8080'
+LOCAL_PORT_VIDEO = '11111'
 
 if __name__ == '__main__':
 
