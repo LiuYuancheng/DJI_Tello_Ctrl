@@ -20,7 +20,6 @@ import sys
 import time
 import platform  
 import cv2
-
 import telloGlobal as gv
 
 IN_CMD_LIST = ['command', 'takeoff', 'land', 'streamon', 'streamoff']
@@ -30,8 +29,6 @@ XA_CMD_LIST = ['forward', 'back', 'left', 'right']
 PERIODIC = 10 # periodicly call by 300ms
 LOCAL_IP = '192.168.10.2'
 LOCAL_PORT_VIDEO = '11111'
-
-
 
 class PanelPlaceHolder(wx.Panel):
     """ Place Holder Panel"""
@@ -44,33 +41,37 @@ class ShowCapture(wx.Panel):
     """ Image display panel.
     """
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent,  size=(960, 720))
+        wx.Panel.__init__(self, parent,  size=(480, 360))
         self.SetSize((400, 300))
         #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         self.SetBackgroundColour(wx.Colour(200, 200, 200))
         self.lastPeriodicTime = time.time()
         #self.bmp = wx.BitmapFromBuffer(width, height, frame)
-        self.bmp = wx.Bitmap(960, 720)
+        self.bmp = wx.Bitmap(480, 360)
         self.Bind(wx.EVT_PAINT, self.onPaint)
         self.SetDoubleBuffered(True)
 
     def onPaint(self, evt):
         dc = wx.PaintDC(self)
-        dc.DrawRectangle(0, 0, 960, 720)
+        dc.DrawRectangle(0, 0, 480, 360)
         dc.DrawBitmap(self.bmp, 0, 0)
 
+    def scale_bitmap(self, bitmap, width, height):
+        image = wx.ImageFromBitmap(bitmap)
+        image = image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
+        result = wx.BitmapFromImage(image)
+        return result
 
     def periodic(self , now):
         if now - self.lastPeriodicTime >= 0.5:
             self.updateDisplay()
-
 
     def updateCvFrame(self, cvFrame):
         #print(cvFrame.shape[:2])
         frame = cv2.cvtColor(cvFrame, cv2.COLOR_BGR2RGB)
         #frame = cv2.cvtColor(cvFrame, cv2.COLOR_BGR2RGB)
         #self.bmp.CopyFromBuffer(frame)
-        self.bmp = wx.BitmapFromBuffer(960, 720, frame)
+        self.bmp = self.scale_bitmap(wx.BitmapFromBuffer(960, 720, frame), 480, 360)
 
     def updateDisplay(self, updateFlag=None):
         """ Set/Update the display: if called as updateDisplay() the function will 
