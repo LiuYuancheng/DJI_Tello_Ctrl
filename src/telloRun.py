@@ -13,33 +13,37 @@
 # License:     YC
 #-----------------------------------------------------------------------------
 
-import wx # use wx to build the UI.
+import wx  # use wx to build the UI.
 import time
 import socket
 import sys
 import time
-import platform  
+import platform
 import cv2
 import telloGlobal as gv
 
-IN_CMD_LIST = ['command', 'takeoff', 'land', 'streamon', 'streamoff']
-YA_CMD_LIST = ['up', 'down', 'cw', 'ccw']
-XA_CMD_LIST = ['forward', 'back', 'left', 'right']
+IN_CMD_LIST = ['command', 'takeoff', 'land', 'streamon', 'streamoff', ]
+YA_CMD_LIST = ['flip l', 'up', 'flip r', 'cw', 'down',  'ccw']
+XA_CMD_LIST = ['', 'forward', '', 'left', 'back',  'right']
 
-PERIODIC = 10 # periodicly call by 300ms
+PERIODIC = 10  # periodicly call by 300ms
 LOCAL_IP = '192.168.10.2'
 LOCAL_PORT_VIDEO = '11111'
 
+
 class PanelPlaceHolder(wx.Panel):
     """ Place Holder Panel"""
+
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, size=(400, 300))
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
         wx.StaticText(self, -1, "Place Holder:", (20, 20))
 
+
 class ShowCapture(wx.Panel):
     """ Image display panel.
     """
+
     def __init__(self, parent):
         wx.Panel.__init__(self, parent,  size=(480, 360))
         self.SetSize((400, 300))
@@ -55,6 +59,13 @@ class ShowCapture(wx.Panel):
         dc = wx.PaintDC(self)
         dc.DrawRectangle(0, 0, 480, 360)
         dc.DrawBitmap(self.bmp, 0, 0)
+        dc.SetPen(wx.Pen('GREEN', width=1, style=wx.PENSTYLE_DOT))
+        dc.DrawLine(240, 0, 240, 180)
+        dc.DrawLine(0, 180, 480, 180)
+        dc.DrawLine(220, 200, 260, 200)
+        dc.DrawLine(225, 220, 255, 220)
+        dc.DrawLine(230, 240, 250, 240)
+
 
     def scale_bitmap(self, bitmap, width, height):
         image = wx.ImageFromBitmap(bitmap)
@@ -62,7 +73,7 @@ class ShowCapture(wx.Panel):
         result = wx.BitmapFromImage(image)
         return result
 
-    def periodic(self , now):
+    def periodic(self, now):
         if now - self.lastPeriodicTime >= 0.5:
             self.updateDisplay()
 
@@ -71,7 +82,8 @@ class ShowCapture(wx.Panel):
         frame = cv2.cvtColor(cvFrame, cv2.COLOR_BGR2RGB)
         #frame = cv2.cvtColor(cvFrame, cv2.COLOR_BGR2RGB)
         #self.bmp.CopyFromBuffer(frame)
-        self.bmp = self.scale_bitmap(wx.BitmapFromBuffer(960, 720, frame), 480, 360)
+        self.bmp = self.scale_bitmap(
+            wx.BitmapFromBuffer(960, 720, frame), 480, 360)
 
     def updateDisplay(self, updateFlag=None):
         """ Set/Update the display: if called as updateDisplay() the function will 
@@ -84,19 +96,20 @@ class ShowCapture(wx.Panel):
 
 class telloFrame(wx.Frame):
     """ Railway system control hub."""
+
     def __init__(self, parent, id, title):
         """ Init the UI and parameters """
-        wx.Frame.__init__(self, parent, id, title, size= (500, 700))
+        wx.Frame.__init__(self, parent, id, title, size=(500, 560))
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
 
         host = ''
         port = 9000
-        locaddr = (host,port)
+        locaddr = (host, port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(locaddr)
 
         # Init the image capture part.
-        
+
         self.capture = None
 
         self.SetSizer(self.buidUISizer())
@@ -106,50 +119,58 @@ class telloFrame(wx.Frame):
         self.Bind(wx.EVT_TIMER, self.periodic)
         self.timer.Start(PERIODIC)  # every 300 ms
 
-        
     def buidUISizer(self):
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
         hsizer = wx.BoxSizer(wx.VERTICAL)
-        
+
         self.camPanel = ShowCapture(self)
         hsizer.Add(self.camPanel, flag=flagsR, border=2)
+        hsizer.AddSpacer(10)
 
         bhox1 = wx.BoxSizer(wx.HORIZONTAL)
         for item in IN_CMD_LIST:
-            outputBt = wx.Button(self, label=item, size=(80, 40))
+            outputBt = wx.Button(self, label=item, size=(90, 30))
             outputBt.Bind(wx.EVT_BUTTON, self.onButton)
-            bhox1.Add(outputBt, flag=flagsR, border=2)
+            bhox1.Add(outputBt, flag=flagsR, border=5)
         hsizer.Add(bhox1, flag=flagsR, border=2)
-
+        hsizer.AddSpacer(5)
+        hsizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(480, -1),
+                                 style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
+        hsizer.AddSpacer(5)
         bhox2 = wx.BoxSizer(wx.HORIZONTAL)
+        bhox2.AddSpacer(10)
+        gs1 = wx.GridSizer(2, 3, 5, 5)
         for item in YA_CMD_LIST:
-            outputBt = wx.Button(self, label=item, size=(80, 40))
+            outputBt = wx.Button(self, label=item, size=(50, 50))
             outputBt.Bind(wx.EVT_BUTTON, self.onButton)
-            bhox2.Add(outputBt, flag=flagsR, border=2)
-        hsizer.Add(bhox2, flag=flagsR, border=2)
+            gs1.Add(outputBt, flag=flagsR, border=2)
+        bhox2.Add(gs1, flag=flagsR, border=2)
 
+        bhox2.AddSpacer(120)
 
-        bhox3 = wx.BoxSizer(wx.HORIZONTAL)
+        gs2 = wx.GridSizer(2, 3, 5, 5)
         for item in XA_CMD_LIST:
-            outputBt = wx.Button(self, label=item, size=(80, 40))
+            outputBt = wx.Button(self, label=item, size=(50, 50))
             outputBt.Bind(wx.EVT_BUTTON, self.onButton)
-            bhox3.Add(outputBt, flag=flagsR, border=2)
-        hsizer.Add(bhox3, flag=flagsR, border=2)
+            gs2.Add(outputBt, flag=flagsR, border=2)
+        bhox2.Add(gs2, flag=flagsR, border=2)
+
+        hsizer.Add(bhox2, flag=flagsR, border=2)
         return hsizer
 
     def onButton(self, event):
         msg = event.GetEventObject().GetLabel()
         if not msg in IN_CMD_LIST:
-            msg = msg +" 30"
+            msg = msg + " 30"
         print(msg)
         self.sendMsg(msg)
         data = self.recvMsg() if msg in IN_CMD_LIST else ''
         print(data)
-        if data== 'ok' and msg == 'streamon':
+        if data == 'ok' and msg == 'streamon':
             print('q')
             addr = 'udp://' + LOCAL_IP + ':' + str(LOCAL_PORT_VIDEO)
             self.capture = cv2.VideoCapture(addr)
-        if data== 'ok' and msg == 'streamoff':
+        if data == 'ok' and msg == 'streamoff':
             self.capture.release()
             self.capture = None
 
@@ -183,6 +204,7 @@ class MyApp(wx.App):
         mainFrame = telloFrame(None, -1, gv.APP_NAME)
         mainFrame.Show(True)
         return True
+
 
 app = MyApp(0)
 app.MainLoop()
