@@ -24,6 +24,7 @@ class ShowCapture(wx.Panel):
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_TIMER, self.NextFrame)
+        self.SetDoubleBuffered(True)
 
     def OnPaint(self, evt):
         dc = wx.BufferedPaintDC(self)
