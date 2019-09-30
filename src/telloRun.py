@@ -19,6 +19,7 @@ import socket
 import sys
 import time
 import platform  
+import cv2
 
 import telloGlobal as gv
 
@@ -43,19 +44,19 @@ class ShowCapture(wx.Panel):
     """ Image display panel.
     """
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent,  size=(400, 300))
+        wx.Panel.__init__(self, parent,  size=(960, 720))
         self.SetSize((400, 300))
         #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         self.SetBackgroundColour(wx.Colour(200, 200, 200))
         self.lastPeriodicTime = time.time()
         #self.bmp = wx.BitmapFromBuffer(width, height, frame)
-        self.bmp = wx.Bitmap(400, 300)
+        self.bmp = wx.Bitmap(960, 720)
         self.Bind(wx.EVT_PAINT, self.onPaint)
         self.SetDoubleBuffered(True)
 
     def onPaint(self, evt):
         dc = wx.PaintDC(self)
-        dc.DrawRectangle(0, 0, 400, 300)
+        dc.DrawRectangle(0, 0, 960, 720)
         dc.DrawBitmap(self.bmp, 0, 0)
 
 
@@ -65,7 +66,11 @@ class ShowCapture(wx.Panel):
 
 
     def updateCvFrame(self, cvFrame):
-        self.bmp = wx.BitmapFromBuffer(400, 300, cvFrame)
+        #print(cvFrame.shape[:2])
+        frame = cv2.cvtColor(cvFrame, cv2.COLOR_BGR2RGB)
+        #frame = cv2.cvtColor(cvFrame, cv2.COLOR_BGR2RGB)
+        #self.bmp.CopyFromBuffer(frame)
+        self.bmp = wx.BitmapFromBuffer(960, 720, frame)
 
     def updateDisplay(self, updateFlag=None):
         """ Set/Update the display: if called as updateDisplay() the function will 
@@ -138,10 +143,13 @@ class telloFrame(wx.Frame):
         print(msg)
         self.sendMsg(msg)
         data = self.recvMsg() if msg in IN_CMD_LIST else ''
+        print(data)
         if data== 'ok' and msg == 'streamon':
+            print('q')
             addr = 'udp://' + LOCAL_IP + ':' + str(LOCAL_PORT_VIDEO)
             self.capture = cv2.VideoCapture(addr)
         if data== 'ok' and msg == 'streamoff':
+            self.capture.release()
             self.capture = None
 
     def sendMsg(self, msg):
@@ -155,7 +163,7 @@ class telloFrame(wx.Frame):
     def periodic(self, event):
         """ periodic capture the image from camera:
         """
-        if self.capture is not None and self.capture.isOpened():
+        if self.capture and self.capture.isOpened():
             ret, frame = self.capture.read()
             if ret:
                 self.camPanel.updateCvFrame(frame)
@@ -163,7 +171,7 @@ class telloFrame(wx.Frame):
         now = time.time()
         self.camPanel.periodic(now)
         if now - self.lastPeriodicTime >= 3:
-            self.sendMsg('speed?')
+            self.sendMsg('command')
             #print('speed: %s' %speed)
 
 

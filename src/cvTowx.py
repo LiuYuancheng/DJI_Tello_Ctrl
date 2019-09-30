@@ -14,6 +14,7 @@ class ShowCapture(wx.Panel):
         ret, frame = self.capture.read()
 
         height, width = frame.shape[:2]
+        print((height, width))
         parent.SetSize((width, height))
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -33,10 +34,10 @@ class ShowCapture(wx.Panel):
     def NextFrame(self, event):
         if self.capture.isOpened():
             ret, frame = self.capture.read()
-            #if ret:
-            #    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            #    self.bmp.CopyFromBuffer(frame)
-            #    self.Refresh()
+            if ret:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                self.bmp.CopyFromBuffer(frame)
+                self.Refresh()
 
 
 
