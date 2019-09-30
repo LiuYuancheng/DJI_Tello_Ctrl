@@ -7,7 +7,7 @@ LOCAL_PORT_VIDEO = '11111'
 
 
 class ShowCapture(wx.Panel):
-    def __init__(self, parent, capture, fps=5):
+    def __init__(self, parent, capture, fps=25):
         wx.Panel.__init__(self, parent)
 
         self.capture = capture
@@ -20,7 +20,7 @@ class ShowCapture(wx.Panel):
         self.bmp = wx.BitmapFromBuffer(width, height, frame)
 
         self.timer = wx.Timer(self)
-        self.timer.Start(1000./fps)
+        self.timer.Start(15)
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_TIMER, self.NextFrame)
@@ -33,10 +33,10 @@ class ShowCapture(wx.Panel):
     def NextFrame(self, event):
         if self.capture.isOpened():
             ret, frame = self.capture.read()
-            if ret:
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                self.bmp.CopyFromBuffer(frame)
-                self.Refresh()
+            #if ret:
+            #    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            #    self.bmp.CopyFromBuffer(frame)
+            #    self.Refresh()
 
 
 
