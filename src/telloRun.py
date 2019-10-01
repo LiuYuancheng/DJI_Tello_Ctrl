@@ -26,6 +26,17 @@ IN_CMD_LIST = ['command', 'takeoff', 'land', 'streamon', 'streamoff', ]
 YA_CMD_LIST = ['flip l', 'up', 'flip r', 'cw', 'down',  'ccw']
 XA_CMD_LIST = ['', 'forward', '', 'left', 'back',  'right']
 
+KEY_CODE = {
+    '87': 'up',     # Key 'w'
+    '83': 'down',   # key 's'
+    '65': 'cw',     # key 'a'
+    '68': 'ccw',    # key 'd'
+    '315': 'forward', # key 'up'
+    '314': 'left',  # key 'left'
+    '316': 'right',  # key 'right'
+    '317': 'back'   # key 'back'
+}
+
 PERIODIC = 10  # periodicly call by 300ms
 LOCAL_IP = '192.168.10.2'
 LOCAL_PORT_VIDEO = '11111'
@@ -118,6 +129,16 @@ class telloFrame(wx.Frame):
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.periodic)
         self.timer.Start(PERIODIC)  # every 300 ms
+        self.Bind(wx.EVT_KEY_DOWN, self.keyDown)
+
+
+    def keyDown(self, event):
+        print("OnKeyDown event %s" % (event.GetKeyCode()))
+        msg = KEY_CODE[str(event.GetKeyCode())]
+        if not msg in IN_CMD_LIST:
+            msg = msg + " 30"
+        print(msg)
+        self.sendMsg(msg)
 
     def buidUISizer(self):
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
