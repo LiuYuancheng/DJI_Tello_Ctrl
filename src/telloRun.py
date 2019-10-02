@@ -61,7 +61,7 @@ class telloFrame(wx.Frame):
 
     def __init__(self, parent, id, title):
         """ Init the UI and parameters """
-        wx.Frame.__init__(self, parent, id, title, size=(510, 600))
+        wx.Frame.__init__(self, parent, id, title, size=(510, 650))
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
         self.SetIcon(wx.Icon(gv.ICO_PATH))
         
@@ -107,12 +107,13 @@ class telloFrame(wx.Frame):
         hsizer.AddSpacer(5)
 
         bhox1 = wx.BoxSizer(wx.HORIZONTAL)
-
+        bhox1.AddSpacer(20)
         bhox1.Add(wx.StaticText(self, label="Vertical Motion Ctrl".ljust(40)) ,flag=flagsC, border=2)
         bhox1.Add(wx.StaticText(self, label="Takeoff and Cam Ctrl".ljust(40)) ,flag=flagsC, border=2)
         bhox1.Add(wx.StaticText(self, label="Horizontal Motion Ctrl".ljust(40)) ,flag=flagsC, border=2)
         hsizer.Add(bhox1, flag=flagsR, border=2)
 
+        hsizer.AddSpacer(5)
         hsizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(510, -1),
                                  style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
         hsizer.AddSpacer(5)
@@ -156,8 +157,54 @@ class telloFrame(wx.Frame):
             outputBt.Bind(wx.EVT_BUTTON, self.onButton)
             gs3.Add(outputBt, flag=flagsR, border=2)
         bhox2.Add(gs3, flag=flagsR, border=2)
-
         hsizer.Add(bhox2, flag=flagsR, border=2)
+
+        hsizer.AddSpacer(5)
+        hsizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(510, -1),
+                                 style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
+        hsizer.AddSpacer(5)
+
+        bhox3 = wx.BoxSizer(wx.HORIZONTAL)
+        bhox3.AddSpacer(5)
+        bhox3.Add(wx.StaticText(self, label="Track Control:".ljust(15)) ,flag=flagsC, border=2)
+        bhox3.AddSpacer(5)
+        
+        self.trackCtrl = wx.ComboBox(self, -1, choices=['Track1', 'Track2'], style=wx.CB_READONLY)
+        self.trackCtrl.SetSelection(0)
+        bhox3.Add(self.trackCtrl ,flag=flagsC, border=2)
+
+        bhox3.AddSpacer(5)
+        self.trackAcBt = wx.Button(self, label='ActiveTrack', size=(90, 22))
+        bhox3.Add(self.trackAcBt ,flag=flagsR, border=2)
+
+        bhox3.AddSpacer(5)
+        self.trackEdBt = wx.Button(self, label='EditTrack', size=(90, 22))
+        bhox3.Add(self.trackEdBt ,flag=flagsR, border=2)
+
+        bhox3.AddSpacer(5)
+        self.trackAnBt = wx.Button(self, label='AddNewTrack', size=(90, 22))
+        bhox3.Add(self.trackAnBt ,flag=flagsR, border=2)
+        
+        hsizer.Add(bhox3, flag=flagsR, border=2)
+
+        hsizer.AddSpacer(5)
+        hsizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(510, -1),
+                                 style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
+        hsizer.AddSpacer(5)
+
+
+        #bhox4 = wx.BoxSizer(wx.HORIZONTAL)
+        #bhox4.AddSpacer(5)
+        #bhox4.Add(wx.StaticText(self, label="Sensor Control:".ljust(15)) ,flag=flagsC, border=2)
+        #bhox4.AddSpacer(5)
+
+        #bhox4.Add(wx.StaticText(self, label="Iteration Number:") ,flag=flagsC, border=2)
+        #self.InheritAttributes = wx.TextCtrl(self, -1, "", size=(100, -1), style=wx.TE_PROCESS_ENTER)
+
+
+
+
+
         return hsizer
 
     def _buildStateSizer(self):
