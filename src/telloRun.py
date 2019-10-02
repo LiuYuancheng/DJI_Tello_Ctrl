@@ -21,6 +21,8 @@ import time
 import platform
 import cv2
 import telloGlobal as gv
+import telloPanel as tp
+
 
 IN_CMD_LIST = ['command', 'takeoff', 'land', 'streamon', 'streamoff', ]
 YA_CMD_LIST = ['flip l', 'up', 'flip r', 'cw', 'down',  'ccw']
@@ -51,58 +53,7 @@ class PanelPlaceHolder(wx.Panel):
         wx.StaticText(self, -1, "Place Holder:", (20, 20))
 
 
-class ShowCapture(wx.Panel):
-    """ Image display panel.
-    """
 
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent,  size=(480, 360))
-        self.SetSize((400, 300))
-        #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        self.SetBackgroundColour(wx.Colour(200, 200, 200))
-        self.lastPeriodicTime = time.time()
-        #self.bmp = wx.BitmapFromBuffer(width, height, frame)
-        self.bmp = wx.Bitmap(480, 360)
-        self.Bind(wx.EVT_PAINT, self.onPaint)
-        self.SetDoubleBuffered(True)
-
-    def onPaint(self, evt):
-        dc = wx.PaintDC(self)
-        dc.DrawRectangle(0, 0, 480, 360)
-        dc.DrawBitmap(self.bmp, 0, 0)
-        dc.SetPen(wx.Pen('GREEN', width=1, style=wx.PENSTYLE_DOT))
-        dc.DrawLine(240, 0, 240, 180)
-        dc.DrawLine(0, 180, 480, 180)
-        dc.DrawLine(220, 200, 260, 200)
-        dc.DrawLine(225, 220, 255, 220)
-        dc.DrawLine(230, 240, 250, 240)
-
-
-    def scale_bitmap(self, bitmap, width, height):
-        image = wx.ImageFromBitmap(bitmap)
-        image = image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
-        result = wx.BitmapFromImage(image)
-        return result
-
-    def periodic(self, now):
-        if now - self.lastPeriodicTime >= 0.5:
-            self.updateDisplay()
-
-    def updateCvFrame(self, cvFrame):
-        #print(cvFrame.shape[:2])
-        frame = cv2.cvtColor(cvFrame, cv2.COLOR_BGR2RGB)
-        #frame = cv2.cvtColor(cvFrame, cv2.COLOR_BGR2RGB)
-        #self.bmp.CopyFromBuffer(frame)
-        self.bmp = self.scale_bitmap(
-            wx.BitmapFromBuffer(960, 720, frame), 480, 360)
-
-    def updateDisplay(self, updateFlag=None):
-        """ Set/Update the display: if called as updateDisplay() the function will 
-            update the panel, if called as updateDisplay(updateFlag=?) the function will 
-            set the self update flag.
-        """
-        self.Refresh(False)
-        self.Update()
 
 
 class telloFrame(wx.Frame):
@@ -110,15 +61,18 @@ class telloFrame(wx.Frame):
 
     def __init__(self, parent, id, title):
         """ Init the UI and parameters """
-        wx.Frame.__init__(self, parent, id, title, size=(500, 560))
+        wx.Frame.__init__(self, parent, id, title, size=(510, 600))
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
-
+        self.SetIcon(wx.Icon(gv.ICO_PATH))
+        
+        
+        
         host = ''
         port = 9000
         locaddr = (host, port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(locaddr)
-
+        self.connectFlag = False
         # Init the image capture part.
 
         self.capture = None
@@ -143,10 +97,13 @@ class telloFrame(wx.Frame):
     def buidUISizer(self):
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
         hsizer = wx.BoxSizer(wx.VERTICAL)
-
-        self.camPanel = ShowCapture(self)
-        hsizer.Add(self.camPanel, flag=flagsR, border=2)
-        hsizer.AddSpacer(10)
+        hsizer.AddSpacer(5)
+        hsizer.Add(self._buildStateSizer(), flag=flagsR, border=2)
+        hsizer.AddSpacer(5)
+        self.camPanel = tp.PanelCam(self)
+        hsizer.Add(self.camPanel, flag=wx.ALIGN_CENTER_HORIZONTAL |
+                   wx.ALIGN_CENTER_VERTICAL, border=2)
+        hsizer.AddSpacer(5)
 
         bhox1 = wx.BoxSizer(wx.HORIZONTAL)
         for item in IN_CMD_LIST:
@@ -178,6 +135,43 @@ class telloFrame(wx.Frame):
 
         hsizer.Add(bhox2, flag=flagsR, border=2)
         return hsizer
+
+    def _buildStateSizer(self):
+        """ Build the UAV + sensor state display.
+        """
+        flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        hsizer.AddSpacer(5)
+        self.connectBt = wx.Button(self, label='UAV_Connect', size=(90, 20))
+        hsizer.Add(self.connectBt,flag=flagsR, border=2)
+        hsizer.AddSpacer(5)
+        self.connectLbD = wx.StaticText(self, label=" UAV_Offline".ljust(15))
+        self.connectLbD.SetBackgroundColour(wx.Colour(120, 120, 120))
+        hsizer.Add(self.connectLbD,flag=flagsR, border=2)
+        hsizer.AddSpacer(5)
+        self.batteryLbD = wx.StaticText(self, label=" UAV_Battery:[0%]".ljust(20))
+        self.batteryLbD.SetBackgroundColour(wx.Colour(120, 120, 120))
+        hsizer.Add(self.batteryLbD,flag=flagsR, border=2)
+        hsizer.AddSpacer(5)
+        self.connectLbS = wx.StaticText(self, label=" SEN_Offline".ljust(15))
+        self.connectLbS.SetBackgroundColour(wx.Colour(120, 120, 120))
+        hsizer.Add(self.connectLbS,flag=flagsR, border=2)
+        hsizer.AddSpacer(5)
+        self.batteryLbS = wx.StaticText(self, label=" SEN_Battery:[100%]".ljust(20))
+        self.batteryLbS.SetBackgroundColour(wx.Colour(120, 120, 120))
+        hsizer.Add(self.batteryLbS,flag=flagsR, border=2)
+        hsizer.AddSpacer(10)
+        return hsizer
+
+
+    def onConnect(self, event):
+        """ Try to connect the drone and control uder SDK cmd mode.
+        """
+        self.sendMsg('command')
+        if self.recvMsg() == 'ok':
+            self.connectLbD.SetLabel("UAV_Online".ljust(15))
+            self.connectLbD.SetBackgroundColour(wx.Colour('GREEN'))
+            self.connectFlag = True
 
     def onButton(self, event):
         msg = event.GetEventObject().GetLabel()
@@ -213,10 +207,8 @@ class telloFrame(wx.Frame):
 
         now = time.time()
         self.camPanel.periodic(now)
-        if now - self.lastPeriodicTime >= 3:
+        if self.connectFlag and now - self.lastPeriodicTime >= 3:
             self.sendMsg('command')
-            #print('speed: %s' %speed)
-
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------

@@ -16,3 +16,6 @@ dirpath = os.getcwd()
 print("Current working directory is : %s" %dirpath)
 
 APP_NAME = 'DJI Tello Ctrl'
+
+ICO_PATH = "".join([dirpath, "\\img\\telloIcon.ico"])
+
