@@ -14,6 +14,8 @@
 #-----------------------------------------------------------------------------
 import wx
 import time
+import cv2
+
 import telloGlobal as gv
 
 class PanelCam(wx.Panel):

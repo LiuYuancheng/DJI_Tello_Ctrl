@@ -214,7 +214,9 @@ class telloFrame(wx.Frame):
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
         hsizer.AddSpacer(5)
         self.connectBt = wx.Button(self, label='UAV_Connect', size=(90, 20))
+        self.connectBt.Bind(wx.EVT_BUTTON, self.onConnect)
         hsizer.Add(self.connectBt,flag=flagsR, border=2)
+
         hsizer.AddSpacer(5)
         self.connectLbD = wx.StaticText(self, label=" UAV_Offline".ljust(15))
         self.connectLbD.SetBackgroundColour(wx.Colour(120, 120, 120))
