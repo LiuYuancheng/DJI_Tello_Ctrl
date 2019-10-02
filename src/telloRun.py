@@ -96,6 +96,7 @@ class telloFrame(wx.Frame):
 
     def buidUISizer(self):
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
+        flagsC = wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_CENTER_VERTICAL
         hsizer = wx.BoxSizer(wx.VERTICAL)
         hsizer.AddSpacer(5)
         hsizer.Add(self._buildStateSizer(), flag=flagsR, border=2)
@@ -106,32 +107,55 @@ class telloFrame(wx.Frame):
         hsizer.AddSpacer(5)
 
         bhox1 = wx.BoxSizer(wx.HORIZONTAL)
-        for item in IN_CMD_LIST:
-            outputBt = wx.Button(self, label=item, size=(90, 30))
-            outputBt.Bind(wx.EVT_BUTTON, self.onButton)
-            bhox1.Add(outputBt, flag=flagsR, border=5)
+
+        bhox1.Add(wx.StaticText(self, label="Vertical Motion Ctrl".ljust(40)) ,flag=flagsC, border=2)
+        bhox1.Add(wx.StaticText(self, label="Takeoff and Cam Ctrl".ljust(40)) ,flag=flagsC, border=2)
+        bhox1.Add(wx.StaticText(self, label="Horizontal Motion Ctrl".ljust(40)) ,flag=flagsC, border=2)
         hsizer.Add(bhox1, flag=flagsR, border=2)
-        hsizer.AddSpacer(5)
-        hsizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(480, -1),
+
+        hsizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(510, -1),
                                  style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
         hsizer.AddSpacer(5)
         bhox2 = wx.BoxSizer(wx.HORIZONTAL)
         bhox2.AddSpacer(10)
+
+
+
         gs1 = wx.GridSizer(2, 3, 5, 5)
-        for item in YA_CMD_LIST:
-            outputBt = wx.Button(self, label=item, size=(50, 50))
+        for k, item in enumerate(gv.YA_CMD_LIST):
+            bmp0 = wx.Bitmap(gv.YA_PNG_LIST[k], wx.BITMAP_TYPE_ANY)
+            outputBt = wx.BitmapButton(self, id=wx.ID_ANY, bitmap=bmp0, size=(
+                bmp0.GetWidth()+6, bmp0.GetHeight()+6), name=item)
             outputBt.Bind(wx.EVT_BUTTON, self.onButton)
             gs1.Add(outputBt, flag=flagsR, border=2)
         bhox2.Add(gs1, flag=flagsR, border=2)
 
-        bhox2.AddSpacer(120)
+        bhox2.AddSpacer(15)
+        bhox2.Add(wx.StaticLine(self, wx.ID_ANY, size=(-1, 100),style=wx.LI_VERTICAL), flag=flagsR, border=2)
+        bhox2.AddSpacer(15)
 
-        gs2 = wx.GridSizer(2, 3, 5, 5)
-        for item in XA_CMD_LIST:
-            outputBt = wx.Button(self, label=item, size=(50, 50))
+        gs2 = wx.GridSizer(2, 2, 5, 5)
+        for k, item in enumerate(gv.IN_CMD_LIST):
+            bmp0 = wx.Bitmap(gv.IN_PNG_LIST[k], wx.BITMAP_TYPE_ANY)
+            outputBt = wx.BitmapButton(self, id=wx.ID_ANY, bitmap=bmp0, size=(
+                bmp0.GetWidth()+6, bmp0.GetHeight()+6), name=item)
             outputBt.Bind(wx.EVT_BUTTON, self.onButton)
             gs2.Add(outputBt, flag=flagsR, border=2)
         bhox2.Add(gs2, flag=flagsR, border=2)
+
+        bhox2.AddSpacer(15)
+        bhox2.Add(wx.StaticLine(self, wx.ID_ANY, size=(-1, 100),style=wx.LI_VERTICAL), flag=flagsR, border=2)
+        bhox2.AddSpacer(15)
+
+
+        gs3 = wx.GridSizer(2, 3, 5, 5)
+        for k, item in enumerate(gv.XA_CMD_LIST):
+            bmp0 = wx.Bitmap(gv.XA_PNG_LIST[k], wx.BITMAP_TYPE_ANY)
+            outputBt = wx.BitmapButton(self, id=wx.ID_ANY, bitmap=bmp0, size=(
+                bmp0.GetWidth()+6, bmp0.GetHeight()+6), name=item)
+            outputBt.Bind(wx.EVT_BUTTON, self.onButton)
+            gs3.Add(outputBt, flag=flagsR, border=2)
+        bhox2.Add(gs3, flag=flagsR, border=2)
 
         hsizer.Add(bhox2, flag=flagsR, border=2)
         return hsizer
@@ -174,7 +198,7 @@ class telloFrame(wx.Frame):
             self.connectFlag = True
 
     def onButton(self, event):
-        msg = event.GetEventObject().GetLabel()
+        msg = event.GetEventObject().GetName()
         if not msg in IN_CMD_LIST:
             msg = msg + " 30"
         print(msg)
