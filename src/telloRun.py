@@ -23,10 +23,10 @@ import cv2
 import telloGlobal as gv
 import telloPanel as tp
 
-
 IN_CMD_LIST = ['command', 'takeoff', 'land', 'streamon', 'streamoff', ]
 YA_CMD_LIST = ['flip l', 'up', 'flip r', 'cw', 'down',  'ccw']
 XA_CMD_LIST = ['', 'forward', '', 'left', 'back',  'right']
+
 
 KEY_CODE = {
     '87': 'up',     # Key 'w'
@@ -51,9 +51,6 @@ class PanelPlaceHolder(wx.Panel):
         wx.Panel.__init__(self, parent, size=(400, 300))
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
         wx.StaticText(self, -1, "Place Holder:", (20, 20))
-
-
-
 
 
 class telloFrame(wx.Frame):
@@ -193,17 +190,25 @@ class telloFrame(wx.Frame):
         hsizer.AddSpacer(5)
 
 
-        #bhox4 = wx.BoxSizer(wx.HORIZONTAL)
-        #bhox4.AddSpacer(5)
-        #bhox4.Add(wx.StaticText(self, label="Sensor Control:".ljust(15)) ,flag=flagsC, border=2)
-        #bhox4.AddSpacer(5)
+        bhox4 = wx.BoxSizer(wx.HORIZONTAL)
+        bhox4.AddSpacer(5)
+        bhox4.Add(wx.StaticText(self, label="Sensor Control: ".ljust(15)) ,flag=flagsC, border=2)
+        bhox4.AddSpacer(5)
 
-        #bhox4.Add(wx.StaticText(self, label="Iteration Number:") ,flag=flagsC, border=2)
-        #self.InheritAttributes = wx.TextCtrl(self, -1, "", size=(100, -1), style=wx.TE_PROCESS_ENTER)
+        bhox4.Add(wx.StaticText(self, label="Iteration Number: ") ,flag=flagsC, border=2)
+        self.iterN = wx.TextCtrl(self, -1, "", size=(50, -1), style=wx.TE_PROCESS_ENTER)
+        bhox4.Add(self.iterN, flag=flagsR, border=2)
+        bhox4.AddSpacer(5)
+        
+        bhox4.Add(wx.StaticText(self, label="Value of block: ") ,flag=flagsC, border=2)
+        self.blockN = wx.TextCtrl(self, -1, "", size=(50, -1), style=wx.TE_PROCESS_ENTER)
+        bhox4.Add(self.blockN, flag=flagsR, border=2)
+        bhox4.AddSpacer(5)
 
+        self.pattBt = wx.Button(self, label='StartPatt', size=(90, 25))
+        bhox4.Add(self.pattBt, flag=flagsR, border=2)
 
-
-
+        hsizer.Add(bhox4, flag=flagsR, border=2)
 
         return hsizer
 
