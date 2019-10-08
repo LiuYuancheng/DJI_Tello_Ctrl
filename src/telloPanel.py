@@ -2,13 +2,11 @@
 #-----------------------------------------------------------------------------
 # Name:        railwayHub.py
 #
-# Purpose:     This function is used to create a rail control hub to show the 
-#              different situation of the cyber-security attack's influence for
-#              the railway HMI and PLC system.
-#
+# Purpose:     This function is used to create the control or display panel for
+#              the UAV system.
 # Author:      Yuancheng Liu
 #
-# Created:     2019/07/01
+# Created:     2019/10/01
 # Copyright:   YC @ Singtel Cyber Security Research & Development Laboratory
 # License:     YC
 #-----------------------------------------------------------------------------
