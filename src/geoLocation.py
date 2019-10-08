@@ -2,9 +2,15 @@ import re
 import json
 # from urllib2 import urlopen python2
 
+#method 0 example:
+# https://pypi.org/project/geoip2/
+
 from urllib.request import urlopen
 
 url = '172.217.194.105'
+
+# method 1
+
 
 def ipInfo(addr=''):
     from urllib.request import urlopen
@@ -19,23 +25,21 @@ def ipInfo(addr=''):
     #will load the json response into data
     for attr in data.keys():
         #will print the data line by line
-        print(attr,' '*13+'\t->\t',data[attr])
+        print(attr, ' '*13+'\t->\t', data[attr])
 
 
 ipInfo(url)
 
+# method 2
 response = urlopen(url)
 data = json.load(response)
 
-IP=data['ip']
-org=data['org']
+IP = data['ip']
+org = data['org']
 city = data['city']
-country=data['country']
-region=data['region']
+country = data['country']
+region = data['region']
 
 print('Your IP detail\n ')
-print('IP : {4} \nRegion : {1} \nCountry : {2} \nCity : {3} \nOrg : {0}'.format(org,region,country,city,IP))
-
-
-
-
+print('IP : {4} \nRegion : {1} \nCountry : {2} \nCity : {3} \nOrg : {0}'.format(
+    org, region, country, city, IP))
