@@ -64,15 +64,6 @@ class telloFrame(wx.Frame):
         self.Bind(wx.EVT_KEY_DOWN, self.keyDown)
 
 #-----------------------------------------------------------------------------
-    def keyDown(self, event):
-        print("OnKeyDown event %s" % (event.GetKeyCode()))
-        msg = KEY_CODE[str(event.GetKeyCode())]
-        if not msg in gv.IN_CMD_LIST:
-            msg = msg + " 30"
-        print(msg)
-        self.sendMsg(msg)
-
-#-----------------------------------------------------------------------------
     def _buidUISizer(self):
         """ Build the main UI sizer of the frame."""
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
@@ -233,10 +224,15 @@ class telloFrame(wx.Frame):
         return mSizer
 
 #-----------------------------------------------------------------------------
+    def keyDown(self, event):
+        print("OnKeyDown event %s" % (event.GetKeyCode()))
+        msg = KEY_CODE[str(event.GetKeyCode())]
+        print(msg)
+        self.queueCmd(msg)
+
+#-----------------------------------------------------------------------------
     def onButton(self, event):
         msg = event.GetEventObject().GetName()
-        if not msg in gv.IN_CMD_LIST:
-            msg = msg + " 30"
         print("Add message %s in the cmd Q." % msg)
         self.queueCmd(msg)
 
@@ -285,6 +281,8 @@ class telloFrame(wx.Frame):
         if self.cmdQueue.full():
             print("cmd Queue is full")
             return
+        if not cmd in gv.IN_CMD_LIST:
+            cmd = cmd + " 30"
         self.cmdQueue.put(cmd)
 
 #-----------------------------------------------------------------------------
@@ -297,7 +295,6 @@ class telloFrame(wx.Frame):
     def sendMsg(self, msg):
         """ Send the control cmd to the drone directly."""
         self.sock.sendto(msg.encode(encoding="utf-8"), gv.CT_IP)
-
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
