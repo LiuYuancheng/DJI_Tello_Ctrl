@@ -68,3 +68,96 @@ class PanelCam(wx.Panel):
         self.Refresh(False)
         self.Update()
 
+
+class TrackCtrlPanel(wx.Panel):
+    """ Panel provides three Grids to show/set the all the PLCs' I/O data."""
+    def __init__(self, parent):
+        """ Init the panel."""
+        wx.Panel.__init__(self, parent, size=(500, 70))
+        self.SetBackgroundColour(wx.Colour(200, 210, 200))
+        self.selectTrack = 'None'
+        self.trackLbs = []
+        self.trackDict = {'None': ['-']*15}
+        self.loadTrack()
+        self.SetSizer(self._buidUISizer())
+        self.Refresh(False)
+
+    def _buidUISizer(self):
+        mSizer = wx.BoxSizer(wx.VERTICAL)
+        flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
+        flagsC = wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_CENTER_VERTICAL
+        bhox3 = wx.BoxSizer(wx.HORIZONTAL)
+        bhox3.Add(wx.StaticText(
+            self, label="Track Control:".ljust(15)), flag=flagsC, border=2)
+        bhox3.AddSpacer(5)
+        self.trackCtrl = wx.ComboBox(
+            self, -1, choices=list(self.trackDict.keys()),size=(90, 22), style=wx.CB_READONLY)
+        self.trackCtrl.SetSelection(0)
+        self.trackCtrl.Bind(wx.EVT_COMBOBOX, self.onTrackSel)
+        bhox3.Add(self.trackCtrl, flag=flagsR, border=2)
+        bhox3.AddSpacer(5)
+        self.trackAcBt = wx.Button(self, label='ActiveTrack', size=(90, 22))
+        bhox3.Add(self.trackAcBt, flag=flagsR, border=2)
+        bhox3.AddSpacer(5)
+        self.trackAcBt.Bind(wx.EVT_BUTTON, self.onTrackAct)
+
+
+
+        self.trackEdBt = wx.Button(self, label='EditTrack', size=(90, 22))
+        bhox3.Add(self.trackEdBt, flag=flagsR, border=2)
+        bhox3.AddSpacer(5)
+        self.trackAnBt = wx.Button(self, label='AddNewTrack', size=(90, 22))
+        bhox3.Add(self.trackAnBt, flag=flagsR, border=2)
+        mSizer.Add(bhox3, flag=flagsR, border=2)
+        mSizer.AddSpacer(5)
+        # track display area:
+        gs = wx.GridSizer(2, 8, 5, 5)
+        gs.Add(wx.StaticText(self, label="Track:".ljust(12)), flag=flagsC, border=2)
+        for val in self.trackDict[self.selectTrack]:
+            tracklb = wx.StaticText(self, label=str(val).ljust(12))
+            tracklb.SetBackgroundColour(wx.Colour(200, 200, 200))
+            self.trackLbs.append(tracklb)
+            gs.Add(tracklb, flag=flagsR, border=2)
+        mSizer.Add(gs, flag=flagsR, border=2)
+        return mSizer
+
+    def loadTrack(self):
+        """ Load the track from the track file.
+        """
+        f = open(gv.TRACK_PATH, "r")
+        fh = f.readlines()
+        for line in fh:
+            parms = line.split(';')
+            key, val = parms[0], parms[1:]
+            self.trackDict[key] = val
+        print(self.trackDict.keys())
+        f.close()
+
+    def onTrackSel(self, event):
+        sel = self.trackCtrl.GetSelection()
+        self.selectTrack = self.trackCtrl.GetString(sel)
+        self.trackAcBt.Enable(self.selectTrack != 'None')
+        # clear all 
+        for i, val in enumerate(self.trackDict['None']):
+            self.trackLbs[i].SetLabel(str(val).ljust(12))
+        # set to selected track
+        for i, val in enumerate(self.trackDict[self.selectTrack]):
+            self.trackLbs[i].SetLabel(str(val).ljust(12))
+        self.Refresh(False)
+
+    def onTrackAct(self, event):
+        if 
+
+                
+                
+
+
+
+    
+
+
+
+
+
+
+

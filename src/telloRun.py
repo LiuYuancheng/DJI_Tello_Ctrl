@@ -75,8 +75,7 @@ class telloFrame(wx.Frame):
         mSizer.AddSpacer(5)
         # Row Idx = 1 : Camera display 
         self.camPanel = tp.PanelCam(self)
-        mSizer.Add(self.camPanel, flag=wx.ALIGN_CENTER_HORIZONTAL |
-                   wx.ALIGN_CENTER_VERTICAL, border=2)
+        mSizer.Add(self.camPanel, flag=flagsC, border=2)
         mSizer.AddSpacer(5)
         # Row Idx = 2: Drone Control part
         bhox1 = wx.BoxSizer(wx.HORIZONTAL)
@@ -100,25 +99,10 @@ class telloFrame(wx.Frame):
                                  style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
         mSizer.AddSpacer(5)
         # Row Idx = 3 : Track edition and control.
-        bhox3 = wx.BoxSizer(wx.HORIZONTAL)
-        bhox3.AddSpacer(5)
-        bhox3.Add(wx.StaticText(
-            self, label="Track Control:".ljust(15)), flag=flagsC, border=2)
-        bhox3.AddSpacer(5)
-        self.trackCtrl = wx.ComboBox(
-            self, -1, choices=['Track1', 'Track2'], style=wx.CB_READONLY)
-        self.trackCtrl.SetSelection(0)
-        bhox3.Add(self.trackCtrl, flag=flagsC, border=2)
-        bhox3.AddSpacer(5)
-        self.trackAcBt = wx.Button(self, label='ActiveTrack', size=(90, 22))
-        bhox3.Add(self.trackAcBt, flag=flagsR, border=2)
-        bhox3.AddSpacer(5)
-        self.trackEdBt = wx.Button(self, label='EditTrack', size=(90, 22))
-        bhox3.Add(self.trackEdBt, flag=flagsR, border=2)
-        bhox3.AddSpacer(5)
-        self.trackAnBt = wx.Button(self, label='AddNewTrack', size=(90, 22))
-        bhox3.Add(self.trackAnBt, flag=flagsR, border=2)
-        mSizer.Add(bhox3, flag=flagsR, border=2)
+        self.trackPanel = tp.TrackCtrlPanel(self)
+        mSizer.Add(self.trackPanel, flag=flagsC, border=2)
+
+
         # Split line
         mSizer.AddSpacer(5)
         mSizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(510, -1),
@@ -261,6 +245,9 @@ class telloFrame(wx.Frame):
         if self.connectFlag and now - self.lastPeriodicTime >= 3:
             self.queueCmd('command')
             self.lastPeriodicTime =  now
+        
+        
+        
         # check the cmd send
         if not self.cmdQueue.empty():
             msg = self.cmdQueue.get()
