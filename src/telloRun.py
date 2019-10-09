@@ -22,6 +22,7 @@ import wx  # use wx to build the UI.
 import cv2
 import telloGlobal as gv
 import telloPanel as tp
+import telloSensor as ts
 
 KEY_CODE = {
     '87': 'up',     # Key 'w'
@@ -55,6 +56,10 @@ class telloFrame(wx.Frame):
         self.sock.bind(gv.FB_IP)
         # Init the UI.
         self.SetSizer(self._buidUISizer())
+
+        self.thread1 = ts.telloSensor(1, "Thread-1", 1)
+        self.thread1.start()
+
         # Set the periodic feedback:
         self.lastPeriodicTime = time.time()
         self.timer = wx.Timer(self)
@@ -62,6 +67,10 @@ class telloFrame(wx.Frame):
         self.timer.Start(PERIODIC)  # every 300 ms
         # Set the key sense event
         self.Bind(wx.EVT_KEY_DOWN, self.keyDown)
+
+        # Add Close event here. 
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
+
 
 #-----------------------------------------------------------------------------
     def _buidUISizer(self):
@@ -244,7 +253,7 @@ class telloFrame(wx.Frame):
                 self.camPanel.updateCvFrame(frame)
                 self.camPanel.periodic(now)
         # Update the active cmd
-        if self.connectFlag and now - self.lastPeriodicTime >= 3:
+        if self.connectFlag and now - self.lastPeriodicTime >= 5:
             cmd = gv.iTrackPanel.getAction()
             if not cmd: cmd = 'command'
             self.queueCmd(cmd)
@@ -282,6 +291,13 @@ class telloFrame(wx.Frame):
     def sendMsg(self, msg):
         """ Send the control cmd to the drone directly."""
         self.sock.sendto(msg.encode(encoding="utf-8"), gv.CT_IP)
+
+    #-----------------------------------------------------------------------------
+    def OnClose(self, event):
+        #self.ser.close()
+        self.thread1.stop()
+        self.Destroy()
+
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
