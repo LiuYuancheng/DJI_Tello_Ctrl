@@ -1,0 +1,2 @@
+Track1;takeoff;up 50;cw 3600;up 50;cw 3600;up 50;cw 3600;land
+Track2;takeoff;up 50;cw 3600;up 50;cw 3600;cw 3600;land

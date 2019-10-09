@@ -48,7 +48,7 @@ class telloFrame(wx.Frame):
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
         self.SetIcon(wx.Icon(gv.ICO_PATH))
         self.capture = None         # Video capture.
-        self.connectFlag = False    # connection flag. 
+        self.connectFlag = True    # connection flag. 
         self.cmdQueue = queue.Queue(maxsize=10)
         # Init the UDP server.
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -99,7 +99,7 @@ class telloFrame(wx.Frame):
                                  style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
         mSizer.AddSpacer(5)
         # Row Idx = 3 : Track edition and control.
-        self.trackPanel = tp.TrackCtrlPanel(self)
+        gv.iTrackPanel = self.trackPanel = tp.TrackCtrlPanel(self)
         mSizer.Add(self.trackPanel, flag=flagsC, border=2)
 
 
@@ -216,9 +216,11 @@ class telloFrame(wx.Frame):
 
 #-----------------------------------------------------------------------------
     def onButton(self, event):
-        msg = event.GetEventObject().GetName()
-        print("Add message %s in the cmd Q." % msg)
-        self.queueCmd(msg)
+        cmd = event.GetEventObject().GetName()
+        print("Add message %s in the cmd Q." % cmd)
+        if not cmd in gv.IN_CMD_LIST:
+            cmd = cmd + " 30"
+        self.queueCmd(cmd)
 
 #-----------------------------------------------------------------------------
     def onConnect(self, event):
@@ -243,17 +245,18 @@ class telloFrame(wx.Frame):
                 self.camPanel.periodic(now)
         # Update the active cmd
         if self.connectFlag and now - self.lastPeriodicTime >= 3:
-            self.queueCmd('command')
+            cmd = gv.iTrackPanel.getAction()
+            if not cmd: cmd = 'command'
+            print("xxx")
+            self.queueCmd(cmd)
             self.lastPeriodicTime =  now
-        
-        
         
         # check the cmd send
         if not self.cmdQueue.empty():
             msg = self.cmdQueue.get()
             print(msg)
             self.sendMsg(msg)
-            data = self.recvMsg() if msg in gv.IN_CMD_LIST else ''
+            data = self.recvMsg() if msg in ['streamon', 'streamoff'] else ''
             if msg == 'streamon' and data == 'ok':
                 ip, port = gv.VD_IP
                 addr = 'udp://%s:%s' % (str(ip), str(port))
@@ -268,8 +271,6 @@ class telloFrame(wx.Frame):
         if self.cmdQueue.full():
             print("cmd Queue is full")
             return
-        if not cmd in gv.IN_CMD_LIST:
-            cmd = cmd + " 30"
         self.cmdQueue.put(cmd)
 
 #-----------------------------------------------------------------------------

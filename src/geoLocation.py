@@ -10,11 +10,12 @@ from urllib.request import urlopen
 import socket
 url1 = 'aws.amazon.com'
 url2 = 'www.datacenterdynamics.com'
-
-ipaddr = str(socket.gethostbyname(url1))
+url3 = 'www.nus.edu.sg'
+ipaddr = str(socket.gethostbyname(url3))
 
 #url = '172.217.194.105'
 url = ipaddr
+#url = '137.132.212.202'
 # url = 'https://www.datacenterdynamics.com'
 # method 1
 
@@ -151,7 +152,7 @@ class GoogleMapDownloader:
 print((lat, lon))
 
 # Create a new instance of GoogleMap Downloader
-gmd = GoogleMapDownloader(float(lat),float(lon), 11)
+gmd = GoogleMapDownloader(float(lat),float(lon), 18)
 
 print("The tile coorindates are {}".format(gmd.getXY()))
 

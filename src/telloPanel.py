@@ -78,6 +78,7 @@ class TrackCtrlPanel(wx.Panel):
         self.selectTrack = 'None'
         self.trackLbs = []
         self.trackDict = {'None': ['-']*15}
+        self.actionIdx = -1
         self.loadTrack()
         self.SetSizer(self._buidUISizer())
         self.Refresh(False)
@@ -146,17 +147,26 @@ class TrackCtrlPanel(wx.Panel):
         self.Refresh(False)
 
     def onTrackAct(self, event):
-        if 
+        self.actionIdx = 0 if self.selectTrack != 'None' else -1
+        print("Active track %s" %self.selectTrack)
 
-                
-                
-
-
-
-    
-
-
-
+    def getAction(self):
+        if self.selectTrack == 'None' or self.actionIdx == -1:
+            return None
+        else:
+            cmdList = self.trackDict[self.selectTrack]
+            if self.actionIdx == len(cmdList):
+                self.trackLbs[self.actionIdx-1].SetBackgroundColour(wx.Colour(200, 200, 200))
+                self.Refresh(False)
+                self.actionIdx = -1
+                return 'land'
+            else:
+                cmd = cmdList[self.actionIdx]
+                self.trackLbs[self.actionIdx].SetBackgroundColour(wx.Colour('GREEN'))
+                if self.actionIdx > 0: self.trackLbs[self.actionIdx-1].SetBackgroundColour(wx.Colour(200, 200, 200))
+                self.Refresh(False)
+                self.actionIdx += 1
+                return cmd
 
 
 
