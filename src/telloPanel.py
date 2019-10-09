@@ -102,8 +102,6 @@ class TrackCtrlPanel(wx.Panel):
         bhox3.AddSpacer(5)
         self.trackAcBt.Bind(wx.EVT_BUTTON, self.onTrackAct)
 
-
-
         self.trackEdBt = wx.Button(self, label='EditTrack', size=(90, 22))
         bhox3.Add(self.trackEdBt, flag=flagsR, border=2)
         bhox3.AddSpacer(5)

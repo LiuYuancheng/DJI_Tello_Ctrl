@@ -44,11 +44,11 @@ class telloFrame(wx.Frame):
     """ Railway system control hub."""
     def __init__(self, parent, id, title):
         """ Init the UI and parameters """
-        wx.Frame.__init__(self, parent, id, title, size=(510, 650))
+        wx.Frame.__init__(self, parent, id, title, size=(510, 720))
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
         self.SetIcon(wx.Icon(gv.ICO_PATH))
         self.capture = None         # Video capture.
-        self.connectFlag = True    # connection flag. 
+        self.connectFlag = False    # connection flag. 
         self.cmdQueue = queue.Queue(maxsize=10)
         # Init the UDP server.
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -247,7 +247,6 @@ class telloFrame(wx.Frame):
         if self.connectFlag and now - self.lastPeriodicTime >= 3:
             cmd = gv.iTrackPanel.getAction()
             if not cmd: cmd = 'command'
-            print("xxx")
             self.queueCmd(cmd)
             self.lastPeriodicTime =  now
         
