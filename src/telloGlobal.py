@@ -44,9 +44,6 @@ XA_PNG_LIST = ("".join([dirpath, "\\img\\flip_f.png"]),
 # Track record file:
 TRACK_PATH = "".join([dirpath, "\\TrackPath.txt"])
 
-
-
-
 CT_IP = ('192.168.10.1', 8889)  # Drone control IP 
 VD_IP = ('192.168.10.2', 11111) # UDP video stream server IP 
 FB_IP = ('', 9000)              # Own Feedback server IP
@@ -66,3 +63,6 @@ BOOT_LOADER_OFFSET = 256
 iCamPanel = None
 iMainFrame = None
 iTrackPanel = None
+iSensorPanel = None
+
+iSensorChecker = None

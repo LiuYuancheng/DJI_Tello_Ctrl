@@ -68,7 +68,8 @@ class PanelCam(wx.Panel):
         self.Refresh(False)
         self.Update()
 
-
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 class TrackCtrlPanel(wx.Panel):
     """ Panel provides three Grids to show/set the all the PLCs' I/O data."""
     def __init__(self, parent):
@@ -83,6 +84,7 @@ class TrackCtrlPanel(wx.Panel):
         self.SetSizer(self._buidUISizer())
         self.Refresh(False)
 
+#-----------------------------------------------------------------------------
     def _buidUISizer(self):
         mSizer = wx.BoxSizer(wx.VERTICAL)
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
@@ -120,6 +122,7 @@ class TrackCtrlPanel(wx.Panel):
         mSizer.Add(gs, flag=flagsR, border=2)
         return mSizer
 
+#-----------------------------------------------------------------------------
     def loadTrack(self):
         """ Load the track from the track file.
         """
@@ -132,6 +135,7 @@ class TrackCtrlPanel(wx.Panel):
         print(self.trackDict.keys())
         f.close()
 
+#-----------------------------------------------------------------------------
     def onTrackSel(self, event):
         sel = self.trackCtrl.GetSelection()
         self.selectTrack = self.trackCtrl.GetString(sel)
@@ -144,10 +148,12 @@ class TrackCtrlPanel(wx.Panel):
             self.trackLbs[i].SetLabel(str(val).ljust(12))
         self.Refresh(False)
 
+#-----------------------------------------------------------------------------
     def onTrackAct(self, event):
         self.actionIdx = 0 if self.selectTrack != 'None' else -1
         print("Active track %s" %self.selectTrack)
 
+#-----------------------------------------------------------------------------
     def getAction(self):
         if self.selectTrack == 'None' or self.actionIdx == -1:
             return None
@@ -166,6 +172,65 @@ class TrackCtrlPanel(wx.Panel):
                 self.actionIdx += 1
                 return cmd
 
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+class SensorCtrlPanel(wx.Panel):
+    """ Panel provides three Grids to show/set the all the PLCs' I/O data."""
+    def __init__(self, parent):
+        """ Init the panel."""
+        wx.Panel.__init__(self, parent, size=(500, 70))
+        self.SetBackgroundColour(wx.Colour(200, 210, 200))
+        self.fbLbList = ['Iteration:', 'Generated Seed:', 'Altitude:', 'Sensor CheckSum:', 'Sensor CheckSum:', 'Node State:']
+        self.SetSizer(self._buidUISizer())
+
+#-----------------------------------------------------------------------------
+    def _buidUISizer(self):
+        flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
+        flagsC = wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_CENTER_VERTICAL
+        mSizer = wx.BoxSizer(wx.VERTICAL)
+        bhox4 = wx.BoxSizer(wx.HORIZONTAL)
+        bhox4.AddSpacer(5)
+        bhox4.Add(wx.StaticText(
+            self, label="Sensor Control: ".ljust(15)), flag=flagsR, border=2)
+        bhox4.AddSpacer(5)
+        bhox4.Add(wx.StaticText(self, label="Iteration Number: "),
+                  flag=flagsR, border=2)
+        self.iterN = wx.TextCtrl(
+            self, -1, "", size=(50, -1), style=wx.TE_PROCESS_ENTER)
+        bhox4.Add(self.iterN, flag=flagsR, border=2)
+        bhox4.AddSpacer(5)
+        bhox4.Add(wx.StaticText(self, label="Value of block: "),
+                  flag=flagsR, border=2)
+        self.blockN = wx.TextCtrl(
+            self, -1, "", size=(50, -1), style=wx.TE_PROCESS_ENTER)
+        bhox4.Add(self.blockN, flag=flagsR, border=2)
+        bhox4.AddSpacer(5)
+        self.pattBt = wx.Button(self, label='StartPatt', size=(90, 25))
+
+        self.pattBt.Bind(wx.EVT_BUTTON, self.onPattCheck)
+
+        bhox4.Add(self.pattBt, flag=flagsR, border=2)
+        mSizer.Add(bhox4, flag=flagsR, border=2)
+        bhox4.AddSpacer(5)
+        gs = wx.GridSizer(2, 3, 5, 5)
+        self.lbList = []
+        for val in self.fbLbList:
+            fblb = wx.StaticText(self, label=str(val).ljust(40))
+            self.lbList.append(fblb)
+            gs.Add(fblb, flag=flagsR, border=2)
+        mSizer.Add(gs, flag=flagsR, border=2)
+        return mSizer
+
+#-----------------------------------------------------------------------------
+    def onPattCheck(self, event):
+        iterN = self.iterN.GetValue()
+        blockN = self.blockN.GetValue()
+        print('Patt setting : %s' %str((iterN, blockN)))
+        if gv.iSensorChecker:
+            gv.iSensorChecker.setPattParameter(int(iterN), int(blockN))
 
 
-
+#-----------------------------------------------------------------------------
+    def updateInfo(self, infoList):
+        for i, val in enumerate(infoList):
+            self.lbList[i].SetLabel( str(self.fbLbList[i] + ' '+ val).ljust(40))

@@ -56,8 +56,8 @@ class telloFrame(wx.Frame):
         self.sock.bind(gv.FB_IP)
         # Init the UI.
         self.SetSizer(self._buidUISizer())
-
-        self.thread1 = ts.telloSensor(1, "Thread-1", 1)
+        # Tcp server to connect to the sensor.
+        gv.iSensorChecker = self.thread1 = ts.telloSensor(1, "Thread-1", 1)
         self.thread1.start()
 
         # Set the periodic feedback:
@@ -82,7 +82,7 @@ class telloFrame(wx.Frame):
         # Row Idx = 0 : Statue diaplay
         mSizer.Add(self._buildStateSizer(), flag=flagsR, border=2)
         mSizer.AddSpacer(5)
-        # Row Idx = 1 : Camera display 
+        # Row Idx = 1 : Camera display
         self.camPanel = tp.PanelCam(self)
         mSizer.Add(self.camPanel, flag=flagsC, border=2)
         mSizer.AddSpacer(5)
@@ -119,26 +119,8 @@ class telloFrame(wx.Frame):
         mSizer.AddSpacer(5)
 
         # Row Idx =4 : sensor control
-        bhox4 = wx.BoxSizer(wx.HORIZONTAL)
-        bhox4.AddSpacer(5)
-        bhox4.Add(wx.StaticText(
-            self, label="Sensor Control: ".ljust(15)), flag=flagsC, border=2)
-        bhox4.AddSpacer(5)
-        bhox4.Add(wx.StaticText(self, label="Iteration Number: "),
-                  flag=flagsC, border=2)
-        self.iterN = wx.TextCtrl(
-            self, -1, "", size=(50, -1), style=wx.TE_PROCESS_ENTER)
-        bhox4.Add(self.iterN, flag=flagsR, border=2)
-        bhox4.AddSpacer(5)
-        bhox4.Add(wx.StaticText(self, label="Value of block: "),
-                  flag=flagsC, border=2)
-        self.blockN = wx.TextCtrl(
-            self, -1, "", size=(50, -1), style=wx.TE_PROCESS_ENTER)
-        bhox4.Add(self.blockN, flag=flagsR, border=2)
-        bhox4.AddSpacer(5)
-        self.pattBt = wx.Button(self, label='StartPatt', size=(90, 25))
-        bhox4.Add(self.pattBt, flag=flagsR, border=2)
-        mSizer.Add(bhox4, flag=flagsR, border=2)
+        self.sensorPanel = tp.SensorCtrlPanel(self)
+        mSizer.Add(self.sensorPanel, flag=flagsC, border=2)
         return mSizer
 
 #-----------------------------------------------------------------------------
@@ -297,7 +279,6 @@ class telloFrame(wx.Frame):
         #self.ser.close()
         self.thread1.stop()
         self.Destroy()
-
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------

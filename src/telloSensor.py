@@ -25,21 +25,13 @@ class telloSensor(threading.Thread):
     """ 
     def __init__(self, threadID, name, counter):
         threading.Thread.__init__(self)
-
-        self.repeat_flag = False
-        self.address_issued_flag = False
-        self.data = -1
-        self.sigma = ""
-        self.ch = ''
-        self.patt_complete = False
-        self.readings_x = list()
-        self.readings_y = list()
         self.terminate = False
         self.verifier_checksum = None
+        self.sensor_checksum = None
         self.attitude = None
         self.iterTime = -1
         self.blockNum = 1
-
+        self.seedVal = None
         # Show the netowrk
         for name in psutil.net_if_addrs().keys():
             if 'wlxe84e062bb806' in name:
@@ -49,14 +41,13 @@ class telloSensor(threading.Thread):
         # TCP communication channel:
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.conn = None
             self.sock.bind(gv.SE_IP)
             self.sock.listen(1)
+            self.conn = None
         except:
             print("telloSensor  : TCP socket init error")
             raise
         
-
 #-----------------------------------------------------------------------------
     def run(self):
         while not self.terminate:
@@ -70,6 +61,7 @@ class telloSensor(threading.Thread):
                     data = self.getDistance()
                     if not data: break
                     print(data)
+                gv.iSensorPanel.updateInfo((self.iterTime, self.seedVal, 'check', self.sensor_checksum, self.verifier_checksum, self.attitude))
         print("TCP server terminat.")
 
 #-----------------------------------------------------------------------------
@@ -83,7 +75,7 @@ class telloSensor(threading.Thread):
 #-----------------------------------------------------------------------------
     def getCheckSum(self, number_of_blocks):
         s_b_and_s_w = self.generate_sb_and_sw()
-        seed_value = "Sb: %s, Sw %s" % (hex(s_b_and_s_w[0]), hex(s_b_and_s_w[1]))
+        self.seedVal = seed_value = "Sb: %s, Sw %s" % (hex(s_b_and_s_w[0]), hex(s_b_and_s_w[1]))
         print("telloSensor  : seed val: %s" %seed_value)
         rhos = self.generate_random_block_select_list(s_b_and_s_w[0], s_b_and_s_w[1], number_of_blocks)
         address_list = self.generate_all_address(s_b_and_s_w[1], rhos, number_of_blocks)
@@ -105,6 +97,11 @@ class telloSensor(threading.Thread):
                     sigma = sigma + ch.split(',')[0].upper()
                     self.attitude = ch.split(',')[1]
         return sigma
+
+#-----------------------------------------------------------------------------
+    def setPattParameter(self, iterNum, blockNum):
+        self.iterTime = iterNum
+        self.blockNum = blockNum
 
 #-----------------------------------------------------------------------------
     def calculate_sigma_star(self, address_list):
