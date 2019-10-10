@@ -50,14 +50,13 @@ FB_IP = ('', 9000)              # Own Feedback server IP
 #SE_IP = ('193.168.3.131', 4000) # Sensor IP
 SE_IP = ('0.0.0.0', 4000) # Sensor IP
 
-
+# parameters used by PATT firmware attestation.
 RANDOM_RANGE_MAX = 10000
 RANDOM_RANGE_MIN = 1000
 FULL_MEMORY_SIZE_NODE_MCU = 64
 WORD_SIZE = 16
 FILE_NAME = "".join([dirpath, "\\firmware.hex"])
 BOOT_LOADER_OFFSET = 256
-
 
 #-------<GLOBAL PARAMTERS>-----------------------------------------------------
 iCamPanel = None

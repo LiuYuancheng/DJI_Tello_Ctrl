@@ -5,7 +5,7 @@
 # Purpose:     This function is used to create a tcp server to connect to receive 
 #              the sensor height data and do the PATT attestation. 
 #              
-# Author:      Yuancheng Liu
+# Author:      Sombuddha Chakrava, Yuancheng Liu
 #
 # Created:     2019/07/01
 # Copyright:   YC @ Singtel Cyber Security Research & Development Laboratory
