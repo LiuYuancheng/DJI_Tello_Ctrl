@@ -31,18 +31,16 @@ KEY_CODE = {
     '68': 'ccw',    # key 'd'
     '315': 'forward', # key 'up'
     '314': 'left',  # key 'left'
-    '316': 'right',  # key 'right'
+    '316': 'right', # key 'right'
     '317': 'back'   # key 'back'
 }
 
 PERIODIC = 10  # periodicly call by 10ms
-LOCAL_IP = '192.168.10.2'
-LOCAL_PORT_VIDEO = '11111'
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class telloFrame(wx.Frame):
-    """ Railway system control hub."""
+    """ DJI tello drone system control hub."""
     def __init__(self, parent, id, title):
         """ Init the UI and parameters """
         wx.Frame.__init__(self, parent, id, title, size=(510, 720))
@@ -59,7 +57,6 @@ class telloFrame(wx.Frame):
         # Tcp server to connect to the sensor.
         gv.iSensorChecker = self.thread1 = ts.telloSensor(1, "Thread-1", 1)
         self.thread1.start()
-
         # Set the periodic feedback:
         self.lastPeriodicTime = time.time()
         self.timer = wx.Timer(self)
@@ -67,10 +64,8 @@ class telloFrame(wx.Frame):
         self.timer.Start(PERIODIC)  # every 300 ms
         # Set the key sense event
         self.Bind(wx.EVT_KEY_DOWN, self.keyDown)
-
         # Add Close event here. 
         self.Bind(wx.EVT_CLOSE, self.OnClose)
-
 
 #-----------------------------------------------------------------------------
     def _buidUISizer(self):
@@ -110,14 +105,11 @@ class telloFrame(wx.Frame):
         # Row Idx = 3 : Track edition and control.
         gv.iTrackPanel = self.trackPanel = tp.TrackCtrlPanel(self)
         mSizer.Add(self.trackPanel, flag=flagsC, border=2)
-
-
         # Split line
         mSizer.AddSpacer(5)
         mSizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(510, -1),
                                  style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
         mSizer.AddSpacer(5)
-
         # Row Idx =4 : sensor control
         gv.iSensorPanel = self.sensorPanel = tp.SensorCtrlPanel(self)
         mSizer.Add(self.sensorPanel, flag=flagsC, border=2)
