@@ -119,7 +119,7 @@ class telloFrame(wx.Frame):
         mSizer.AddSpacer(5)
 
         # Row Idx =4 : sensor control
-        self.sensorPanel = tp.SensorCtrlPanel(self)
+        gv.iSensorPanel = self.sensorPanel = tp.SensorCtrlPanel(self)
         mSizer.Add(self.sensorPanel, flag=flagsC, border=2)
         return mSizer
 

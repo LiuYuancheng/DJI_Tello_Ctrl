@@ -64,5 +64,5 @@ iCamPanel = None
 iMainFrame = None
 iTrackPanel = None
 iSensorPanel = None
-
 iSensorChecker = None
+iAddressList = None

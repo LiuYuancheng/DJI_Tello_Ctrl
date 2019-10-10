@@ -233,4 +233,4 @@ class SensorCtrlPanel(wx.Panel):
 #-----------------------------------------------------------------------------
     def updateInfo(self, infoList):
         for i, val in enumerate(infoList):
-            self.lbList[i].SetLabel( str(self.fbLbList[i] + ' '+ val).ljust(40))
+            self.lbList[i].SetLabel( str( str(self.fbLbList[i]) + ' '+ str(val)).ljust(40))

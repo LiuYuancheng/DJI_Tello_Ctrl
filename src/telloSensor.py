@@ -12,7 +12,7 @@
 # License:     YC
 #-----------------------------------------------------------------------------
 
-import psutil
+#import psutil
 import socket
 import threading
 import time
@@ -32,11 +32,13 @@ class telloSensor(threading.Thread):
         self.iterTime = -1
         self.blockNum = 1
         self.seedVal = None
+        self.fh = open("record.txt", 'a')
+        self.fh.write("checksum record: \n")
         # Show the netowrk
-        for name in psutil.net_if_addrs().keys():
-            if 'wlxe84e062bb806' in name:
-                print("telloSensor  : network %s" %str(name))
-                break
+        #for name in psutil.net_if_addrs().keys():
+        #    if 'wlxe84e062bb806' in name:
+        #        print("telloSensor  : network %s" %str(name))
+        #        break
         
         # TCP communication channel:
         try:
@@ -57,11 +59,15 @@ class telloSensor(threading.Thread):
             while not self.terminate:
                 if self.iterTime > 0:
                     self.getCheckSum(self.blockNum )
+                    print('add list')
+                    print(gv.iAddressList)
+                    #break
                 else:
                     data = self.getDistance()
                     if not data: break
                     print(data)
-                gv.iSensorPanel.updateInfo((self.iterTime, self.seedVal, 'check', self.sensor_checksum, self.verifier_checksum, self.attitude))
+                if gv.iSensorPanel:
+                    gv.iSensorPanel.updateInfo((self.iterTime, self.seedVal, 'check', self.sensor_checksum, self.verifier_checksum, self.attitude))
         print("TCP server terminat.")
 
 #-----------------------------------------------------------------------------
@@ -69,6 +75,7 @@ class telloSensor(threading.Thread):
         """ Get the distance reading from the sensor.
         """
         if self.conn:
+            print('send distance msg')
             self.conn.sendall(b'-1')
             return self.conn.recv(1024)
 
@@ -83,19 +90,30 @@ class telloSensor(threading.Thread):
         print("telloSensor : verifier check sum %s" %str(self.verifier_checksum))
         self.sensor_checksum = self.getSensorCheckSum(address_list)
         print("telloSensor : sensor check sum %s" %str(self.verifier_checksum))
-        if self.verifier_checksum != self.sensor_checksum:
+        self.fh.write(str(self.verifier_checksum)+" \n")
+        self.fh.write(str(self.sensor_checksum) +"\n")
+        self.fh.close()
+        if str(self.verifier_checksum) != str(self.sensor_checksum):
             self.iterTime = -1
+            print("The check sum are different.")
+        else: 
+            print("The check sum are same.")
+            self.iterTime -= 1
 
 #-----------------------------------------------------------------------------
     def getSensorCheckSum(self, address_list):
         sigma = ''
+        gv.iAddressList = address_list
         for address in address_list:
+            self.conn, addr = self.sock.accept()
             if self.conn:
                 self.conn.sendall(str(address).encode('utf-8'))
                 ch = self.conn.recv(1024).decode('utf-8')
                 if ch != '' and ("," in ch) and (len(ch.split(',')[0]) == 2):
                     sigma = sigma + ch.split(',')[0].upper()
                     self.attitude = ch.split(',')[1]
+            
+
         return sigma
 
 #-----------------------------------------------------------------------------
@@ -111,7 +129,7 @@ class telloSensor(threading.Thread):
         for address in address_list:
             #print ("Address: %s" % address)
             idx = address % gv.WORD_SIZE
-            line = line_list[address/gv.WORD_SIZE]
+            line = line_list[address//gv.WORD_SIZE]
             sigma_star = sigma_star + line[(idx*2)] + line[(idx*2) + 1]
         print ("Stored sigma: %s" % sigma_star)
         f.close()
@@ -131,7 +149,7 @@ class telloSensor(threading.Thread):
 
 #-----------------------------------------------------------------------------
     def generate_all_address(self, s_w, rhos, number_of_blocks):
-        number_of_words = gv.FULL_MEMORY_SIZE_NODE_MCU / number_of_blocks
+        number_of_words = int(gv.FULL_MEMORY_SIZE_NODE_MCU // number_of_blocks)
         all_address_list = list()
         for rho in rhos:
             beta_list = self.generate_beta_list_for_block(s_w, rho, number_of_words)
