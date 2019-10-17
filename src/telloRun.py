@@ -2,12 +2,12 @@
 #-----------------------------------------------------------------------------
 # Name:        TelloRun.py
 #
-# Purpose:     This function is used to create a controller to control the DJI 
-#              Tello Drone and connect to the height sensor.
+# Purpose:     This module is used to create a controller to control the DJI 
+#              Tello Drone and connect to the Arduino_ESP8266 height sensor.
 #
 # Author:      Yuancheng Liu
 #
-# Created:     2019/07/01
+# Created:     2019/10/04
 # Copyright:   YC @ Singtel Cyber Security Research & Development Laboratory
 # License:     YC
 #-----------------------------------------------------------------------------
@@ -15,24 +15,25 @@
 import sys
 import time
 import socket
-import platform
 import queue as queue
 
-import wx  # use wx to build the UI.
-import cv2
+import wx   # use wx to build the UI.
+import cv2  # use cv2 to capture the UDP video stream.
+
 import telloGlobal as gv
 import telloPanel as tp
 import telloSensor as ts
 
+# The keyboad key to control the drone.
 KEY_CODE = {
-    '87': 'up',     # Key 'w'
-    '83': 'down',   # key 's'
-    '65': 'cw',     # key 'a'
-    '68': 'ccw',    # key 'd'
-    '315': 'forward', # key 'up'
-    '314': 'left',  # key 'left'
-    '316': 'right', # key 'right'
-    '317': 'back'   # key 'back'
+    '87'    : 'up',     # Key 'w'
+    '83'    : 'down',   # key 's'
+    '65'    : 'cw',     # key 'a'
+    '68'    : 'ccw',    # key 'd'
+    '315'   : 'forward', # key 'up'
+    '314'   : 'left',  # key 'left'
+    '316'   : 'right', # key 'right'
+    '317'   : 'back'   # key 'back'
 }
 
 PERIODIC = 10  # periodicly call by 10ms
@@ -40,23 +41,24 @@ PERIODIC = 10  # periodicly call by 10ms
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class telloFrame(wx.Frame):
-    """ DJI tello drone system control hub."""
+    """ DJI tello drone controler program."""
     def __init__(self, parent, id, title):
         """ Init the UI and parameters """
         wx.Frame.__init__(self, parent, id, title, size=(510, 720))
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
         self.SetIcon(wx.Icon(gv.ICO_PATH))
-        self.capture = None         # Video capture.
-        self.connectFlag = False    # connection flag. 
+        self.capture = None         # Cv2 video capture handler.
+        self.connFlagD = False      # Drone connection flag.
+        self.connFlagS = False      # Sensor connection flag.
         self.cmdQueue = queue.Queue(maxsize=10)
-        # Init the UDP server.
+        # Init the cmd/rsp UDP server.
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(gv.FB_IP)
         # Init the UI.
         self.SetSizer(self._buidUISizer())
         # Tcp server to connect to the sensor.
-        gv.iSensorChecker = self.thread1 = ts.telloSensor(1, "Thread-1", 1)
-        self.thread1.start()
+        gv.iSensorChecker = ts.telloSensor(1, "Arduino_ESP8266", 1)
+        gv.iSensorChecker.start()
         # Set the periodic feedback:
         self.lastPeriodicTime = time.time()
         self.timer = wx.Timer(self)
@@ -64,7 +66,7 @@ class telloFrame(wx.Frame):
         self.timer.Start(PERIODIC)  # every 300 ms
         # Set the key sense event
         self.Bind(wx.EVT_KEY_DOWN, self.keyDown)
-        # Add Close event here. 
+        # Add Close event here.
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
 #-----------------------------------------------------------------------------
@@ -184,7 +186,7 @@ class telloFrame(wx.Frame):
         mSizer.Add(self.connectLbS, flag=flagsR, border=2)
         mSizer.AddSpacer(5)
         self.batteryLbS = wx.StaticText(
-            self, label=" SEN_Battery:[100%]".ljust(20))
+            self, label=" SEN_Att: None".ljust(20))
         self.batteryLbS.SetBackgroundColour(wx.Colour(120, 120, 120))
         mSizer.Add(self.batteryLbS, flag=flagsR, border=2)
         mSizer.AddSpacer(10)
@@ -213,7 +215,17 @@ class telloFrame(wx.Frame):
         if self.recvMsg() == 'ok':
             self.connectLbD.SetLabel("UAV_Online".ljust(15))
             self.connectLbD.SetBackgroundColour(wx.Colour('GREEN'))
-            self.connectFlag = True
+            self.connFlagD = True
+
+    def updateSenConn(self, state):
+        """ update the sensor connection state
+        """
+        if self.connFlagS != state:
+            self.connFlagS = state
+            (lbText, bgColor) = ('SEN_Online', wx.Colour('Green')
+                                 ) if self.connFlagS else ('SEN_Offline', wx.Colour(120, 120, 120))
+            self.connectLbS.SetLabel(lbText)
+            self.connectLbS.SetBackgroundColour(bgColor)
 
 #-----------------------------------------------------------------------------
     def periodic(self, event):
@@ -227,7 +239,7 @@ class telloFrame(wx.Frame):
                 self.camPanel.updateCvFrame(frame)
                 self.camPanel.periodic(now)
         # Update the active cmd
-        if self.connectFlag and now - self.lastPeriodicTime >= 5:
+        if self.connFlagD and now - self.lastPeriodicTime >= 5:
             cmd = gv.iTrackPanel.getAction()
             if not cmd: cmd = 'command'
             self.queueCmd(cmd)
@@ -269,7 +281,11 @@ class telloFrame(wx.Frame):
     #-----------------------------------------------------------------------------
     def OnClose(self, event):
         #self.ser.close()
-        self.thread1.stop()
+        if gv.iSensorChecker: gv.iSensorChecker.stop()
+        # Create a client to connect to the server to turnoff the server loop
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect(('127.0.0.1', 4000))
+        client.close()
         self.Destroy()
 
 #-----------------------------------------------------------------------------

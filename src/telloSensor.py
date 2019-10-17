@@ -2,20 +2,21 @@
 #-----------------------------------------------------------------------------
 # Name:        telloSensor.py
 #
-# Purpose:     This function is used to create a tcp server to connect to receive 
-#              the sensor height data and do the PATT attestation. 
+# Purpose:     This module is used to create a tcp server to connect to receive 
+#              the Arduino_ESP8266 height data and do the PATT attestation. 
 #              
 # Author:      Sombuddha Chakrava, Yuancheng Liu
 #
-# Created:     2019/07/01
+# Created:     2019/10/04
 # Copyright:   YC @ Singtel Cyber Security Research & Development Laboratory
 # License:     YC
 #-----------------------------------------------------------------------------
 
-import socket
-import threading
 import time
 import random
+import socket
+import threading
+
 from datetime import datetime
 import telloGlobal as gv
 
@@ -41,20 +42,22 @@ class telloSensor(threading.Thread):
             self.sock.listen(1)
             self.conn = None
         except:
-            print("telloSensor  : TCP socket init error")
+            print("telloSensor  : TCP socket server init error.")
             exit()
             raise
         
 #-----------------------------------------------------------------------------
     def run(self):
+        """ main loop to handle the data feed back."""
         while not self.terminate:
             # Add the reconnection handling
             self.conn, addr = self.sock.accept()
+            if gv.iMainFrame: gv.iMainFrame.updateSenConn(True)
             print('Connection address:'+str(addr))
             while not self.terminate:
                 if self.iterTime > 0:
                     self.checkSumfh = open("checkSumRecord.txt", 'a')
-                    self.checkSumfh.write("checksum record: \n")
+                    self.checkSumfh.write("checksum record [%s]: \n" %str(datetime.today()))
                     self.getCheckSum(self.blockNum)
                     self.checkSumfh.close()
                 else:
@@ -63,6 +66,8 @@ class telloSensor(threading.Thread):
                     print(self.attitude)
                 # update the UI.
                 self.updateSensorUI()
+            if gv.iMainFrame: gv.iMainFrame.updateSenConn(False)
+            print("Sensor disconnected.")
         print("TCP server terminat.")
 
 #-----------------------------------------------------------------------------
@@ -113,7 +118,7 @@ class telloSensor(threading.Thread):
             if self.conn:
                 self.conn.sendall(str(address).encode('utf-8'))
                 ch = self.conn.recv(1024).decode('utf-8')
-                if ch != '' and ("," in ch) and (len(ch.split(',')[0]) == 2):
+                if "," in ch and (len(ch.split(',')[0]) == 2):
                     sigma = sigma + ch.split(',')[0].upper()
                     self.attitude = ch.split(',')[1]
         return sigma
@@ -122,7 +127,7 @@ class telloSensor(threading.Thread):
     def _calculate_sigma_star(self, address_list):
         """ Load the local firmware sample and calculate the PATT check sum."""
         sigma_star = ""
-        f = open(gv.FILE_NAME, "r")
+        f = open(gv.FIRM_FILE_NAME, "r")
         line_list = f.readlines()
         for address in address_list:
             #print ("Address: %s" % address)
@@ -186,5 +191,6 @@ class telloSensor(threading.Thread):
 
 #-----------------------------------------------------------------------------
     def stop(self):
+        """ Stop the thread."""
         self.terminate = True
         if self.conn: self.conn.close()
