@@ -194,3 +194,8 @@ class telloSensor(threading.Thread):
         """ Stop the thread."""
         self.terminate = True
         if self.conn: self.conn.close()
+        # Create a client to connect to the server to turnoff the server loop
+        closeClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        closeClient.connect(('127.0.0.1', gv.SE_IP[1]))
+        closeClient.close()
+

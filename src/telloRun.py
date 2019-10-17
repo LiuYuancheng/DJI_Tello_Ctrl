@@ -15,6 +15,7 @@
 import sys
 import time
 import socket
+import threading
 import queue as queue
 
 import wx   # use wx to build the UI.
@@ -59,6 +60,10 @@ class telloFrame(wx.Frame):
         # Tcp server to connect to the sensor.
         gv.iSensorChecker = ts.telloSensor(1, "Arduino_ESP8266", 1)
         gv.iSensorChecker.start()
+
+        # UDP server the read the drone state
+        self.droneRsp = telloRespone(2, "DJI_DRONE_STATE", 1)
+        self.droneRsp.start()
         # Set the periodic feedback:
         self.lastPeriodicTime = time.time()
         self.timer = wx.Timer(self)
@@ -68,6 +73,7 @@ class telloFrame(wx.Frame):
         self.Bind(wx.EVT_KEY_DOWN, self.keyDown)
         # Add Close event here.
         self.Bind(wx.EVT_CLOSE, self.OnClose)
+        print("Init finished")
 
 #-----------------------------------------------------------------------------
     def _buidUISizer(self):
@@ -278,15 +284,40 @@ class telloFrame(wx.Frame):
         """ Send the control cmd to the drone directly."""
         self.sock.sendto(msg.encode(encoding="utf-8"), gv.CT_IP)
 
-    #-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
     def OnClose(self, event):
         #self.ser.close()
         if gv.iSensorChecker: gv.iSensorChecker.stop()
-        # Create a client to connect to the server to turnoff the server loop
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.connect(('127.0.0.1', 4000))
-        client.close()
+        self.droneRsp.stop()
         self.Destroy()
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+class telloRespone(threading.Thread):
+    """ tello state response UDP reading server thread.""" 
+    def __init__(self, threadID, name, counter):
+        threading.Thread.__init__(self)
+        self.terminate = False
+        self.udpSer = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.udpSer.bind(gv.ST_IP)
+
+#-----------------------------------------------------------------------------
+    def run(self):
+        """ main loop to handle the data feed back."""
+        while not self.terminate:
+            data, _ = self.udpSer.recvfrom(1518)
+            if isinstance(data, bytes):
+                data = data.decode(encoding="utf-8")
+            print (data)
+            if not data: break
+        print('Tello state server terminated')
+
+#-----------------------------------------------------------------------------
+    def stop(self):
+        self.terminate = True
+        closeClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        closeClient.sendto(b'', ("127.0.0.1", gv.ST_IP[1]))
+        closeClient.close()
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
