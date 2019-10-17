@@ -95,7 +95,7 @@ class TrackCtrlPanel(wx.Panel):
         bhox3.AddSpacer(5)
         self.trackCtrl = wx.ComboBox(
             self, -1, choices=list(self.trackDict.keys()),size=(90, 22), style=wx.CB_READONLY)
-        self.trackCtrl.SetSelection(0)
+        self.trackCtrl.SetSelection(1)
         self.trackCtrl.Bind(wx.EVT_COMBOBOX, self.onTrackSel)
         bhox3.Add(self.trackCtrl, flag=flagsR, border=2)
         bhox3.AddSpacer(5)
@@ -178,9 +178,9 @@ class SensorCtrlPanel(wx.Panel):
     """ Panel provides three Grids to show/set the all the PLCs' I/O data."""
     def __init__(self, parent):
         """ Init the panel."""
-        wx.Panel.__init__(self, parent, size=(500, 70))
+        wx.Panel.__init__(self, parent, size=(500, 160))
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
-        self.fbLbList = ['Iteration:', 'Generated Seed:', 'Altitude:', 'Sensor CheckSum:', 'Sensor CheckSum:', 'Node State:']
+        self.fbLbList = ['Iteration:', 'Generated Seed:', 'Altitude:']
         self.SetSizer(self._buidUISizer())
 
 #-----------------------------------------------------------------------------
@@ -196,13 +196,13 @@ class SensorCtrlPanel(wx.Panel):
         bhox4.Add(wx.StaticText(self, label="Iteration Number: "),
                   flag=flagsR, border=2)
         self.iterN = wx.TextCtrl(
-            self, -1, "", size=(50, -1), style=wx.TE_PROCESS_ENTER)
+            self, -1, "1", size=(50, -1), style=wx.TE_PROCESS_ENTER)
         bhox4.Add(self.iterN, flag=flagsR, border=2)
         bhox4.AddSpacer(5)
         bhox4.Add(wx.StaticText(self, label="Value of block: "),
                   flag=flagsR, border=2)
         self.blockN = wx.TextCtrl(
-            self, -1, "", size=(50, -1), style=wx.TE_PROCESS_ENTER)
+            self, -1, "4", size=(50, -1), style=wx.TE_PROCESS_ENTER)
         bhox4.Add(self.blockN, flag=flagsR, border=2)
         bhox4.AddSpacer(5)
         self.pattBt = wx.Button(self, label='StartPatt', size=(90, 25))
@@ -212,13 +212,25 @@ class SensorCtrlPanel(wx.Panel):
         bhox4.Add(self.pattBt, flag=flagsR, border=2)
         mSizer.Add(bhox4, flag=flagsR, border=2)
         bhox4.AddSpacer(5)
-        gs = wx.GridSizer(2, 3, 5, 5)
+        gs = wx.GridSizer(1, 3, 5, 5)
         self.lbList = []
         for val in self.fbLbList:
             fblb = wx.StaticText(self, label=str(val).ljust(40))
             self.lbList.append(fblb)
             gs.Add(fblb, flag=flagsR, border=2)
         mSizer.Add(gs, flag=flagsR, border=2)
+
+        mSizer.Add(wx.StaticText(self, label="Local Firmware Sample CheckSum: "),flag=flagsR, border=2)
+        self.chSmTCL = wx.TextCtrl(self, size=(480, 25), style=wx.TE_MULTILINE)
+        mSizer.Add(self.chSmTCL,flag=flagsR, border=2)
+
+        mSizer.AddSpacer(5)
+        self.attesBar = wx.Gauge(self, range=1000, size=(480, 17), style=wx.GA_HORIZONTAL)
+        mSizer.Add(self.attesBar,flag=flagsR, border=2)
+
+        mSizer.Add(wx.StaticText(self, label="Sensor Final Firmware CheckSum: "),flag=flagsR, border=2)
+        self.chSmTCS = wx.TextCtrl(self, size=(480, 25), style=wx.TE_MULTILINE)
+        mSizer.Add(self.chSmTCS,flag=flagsR, border=2)
         return mSizer
 
 #-----------------------------------------------------------------------------

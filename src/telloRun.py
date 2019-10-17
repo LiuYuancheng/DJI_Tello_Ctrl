@@ -45,7 +45,7 @@ class telloFrame(wx.Frame):
     """ DJI tello drone controler program."""
     def __init__(self, parent, id, title):
         """ Init the UI and parameters """
-        wx.Frame.__init__(self, parent, id, title, size=(510, 720))
+        wx.Frame.__init__(self, parent, id, title, size=(510, 810))
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
         self.SetIcon(wx.Icon(gv.ICO_PATH))
         
@@ -299,17 +299,18 @@ class telloVideopSer(threading.Thread):
         self.terminate = False      
         self.capture = None     # Cv2 video capture handler.
 
-    #-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
     def run(self):
         """ main loop to handle the data feed back."""
         while not self.terminate:
             if self.capture and self.capture.isOpened():
                 ret, frame = self.capture.read()
                 if ret: gv.iCamPanel.updateCvFrame(frame)
-            time.sleep(0.01)
+            #time.sleep(0.01) # add a sleep time to avoid hang the main UI.
+            time.sleep(0.005)
         print('Tello video server terminated')
 
-    #-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
     def initVideoConn(self, initFlag=True):
         """ init the video connection. True-Init/reInit, False - Release"""
         if initFlag:
@@ -320,7 +321,7 @@ class telloVideopSer(threading.Thread):
         else:
             if self.capture: self.capture.release()
             self.capture = None
-
+#-----------------------------------------------------------------------------
     def stop(self):
         self.terminate = True
         self.initVideoConn(False)
