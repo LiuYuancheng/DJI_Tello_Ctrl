@@ -37,7 +37,7 @@ KEY_CODE = {
     '317'   : 'back'   # key 'back'
 }
 
-PERIODIC = 10  # periodicly call by 10ms
+PERIODIC = 100  # periodicly call by 10ms
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
@@ -48,7 +48,7 @@ class telloFrame(wx.Frame):
         wx.Frame.__init__(self, parent, id, title, size=(510, 720))
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
         self.SetIcon(wx.Icon(gv.ICO_PATH))
-        self.capture = None         # Cv2 video capture handler.
+        
         self.connFlagD = False      # Drone connection flag.
         self.connFlagS = False      # Sensor connection flag.
         self.cmdQueue = queue.Queue(maxsize=10)
@@ -62,8 +62,12 @@ class telloFrame(wx.Frame):
         gv.iSensorChecker.start()
 
         # UDP server the read the drone state
-        self.droneRsp = telloRespone(2, "DJI_DRONE_STATE", 1)
+        self.droneRsp = telloRespSer(2, "DJI_DRONE_STATE", 1)
         self.droneRsp.start()
+
+        self.videoRsp = telloVideopSer(2, "DJI_DRONE_STATE", 1)
+        self.videoRsp.start()
+
         # Set the periodic feedback:
         self.lastPeriodicTime = time.time()
         self.timer = wx.Timer(self)
@@ -86,7 +90,7 @@ class telloFrame(wx.Frame):
         mSizer.Add(self._buildStateSizer(), flag=flagsR, border=2)
         mSizer.AddSpacer(5)
         # Row Idx = 1 : Camera display
-        self.camPanel = tp.PanelCam(self)
+        gv.iCamPanel = self.camPanel = tp.PanelCam(self)
         mSizer.Add(self.camPanel, flag=flagsC, border=2)
         mSizer.AddSpacer(5)
         # Row Idx = 2: Drone Control part
@@ -239,11 +243,8 @@ class telloFrame(wx.Frame):
         """
         # update the video
         now = time.time()
-        if self.capture and self.capture.isOpened():
-            ret, frame = self.capture.read()
-            if ret: 
-                self.camPanel.updateCvFrame(frame)
-                self.camPanel.periodic(now)
+ 
+        self.camPanel.periodic(now)
         # Update the active cmd
         if self.connFlagD and now - self.lastPeriodicTime >= 5:
             cmd = gv.iTrackPanel.getAction()
@@ -258,12 +259,9 @@ class telloFrame(wx.Frame):
             self.sendMsg(msg)
             data = self.recvMsg() if msg in ['streamon', 'streamoff'] else ''
             if msg == 'streamon' and data == 'ok':
-                ip, port = gv.VD_IP
-                addr = 'udp://%s:%s' % (str(ip), str(port))
-                self.capture = cv2.VideoCapture(addr)
+                self.videoRsp.initVideoConn(True)
             elif msg == 'streamoff' or data == 'error':
-                if self.capture: self.capture.release()
-                self.capture = None
+                self.videoRsp.initVideoConn(False)
 
 #-----------------------------------------------------------------------------
     def queueCmd(self, cmd):
@@ -289,11 +287,47 @@ class telloFrame(wx.Frame):
         #self.ser.close()
         if gv.iSensorChecker: gv.iSensorChecker.stop()
         self.droneRsp.stop()
+        self.videoRsp.stop()
         self.Destroy()
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
-class telloRespone(threading.Thread):
+class telloVideopSer(threading.Thread):
+    """ tello state response UDP reading server thread.""" 
+    def __init__(self, threadID, name, counter):
+        threading.Thread.__init__(self)
+        self.terminate = False      
+        self.capture = None     # Cv2 video capture handler.
+
+    #-----------------------------------------------------------------------------
+    def run(self):
+        """ main loop to handle the data feed back."""
+        while not self.terminate:
+            if self.capture and self.capture.isOpened():
+                ret, frame = self.capture.read()
+                if ret: gv.iCamPanel.updateCvFrame(frame)
+            time.sleep(0.01)
+        print('Tello video server terminated')
+
+    #-----------------------------------------------------------------------------
+    def initVideoConn(self, initFlag=True):
+        """ init the video connection. True-Init/reInit, False - Release"""
+        if initFlag:
+            if self.capture: self.capture.release() # relased the existed connection.
+            ip, port = gv.VD_IP
+            addr = 'udp://%s:%s' % (str(ip), str(port))
+            self.capture = cv2.VideoCapture(addr)
+        else:
+            if self.capture: self.capture.release()
+            self.capture = None
+
+    def stop(self):
+        self.terminate = True
+        self.initVideoConn(False)
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+class telloRespSer(threading.Thread):
     """ tello state response UDP reading server thread.""" 
     def __init__(self, threadID, name, counter):
         threading.Thread.__init__(self)
@@ -308,7 +342,7 @@ class telloRespone(threading.Thread):
             data, _ = self.udpSer.recvfrom(1518)
             if isinstance(data, bytes):
                 data = data.decode(encoding="utf-8")
-            print (data)
+            #print (data)
             if not data: break
         print('Tello state server terminated')
 
