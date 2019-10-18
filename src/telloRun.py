@@ -259,10 +259,13 @@ class telloFrame(wx.Frame):
         # Update the active cmd
         if self.connFlagD and now - self.lastPeriodicTime >= 5:
             cmd = gv.iTrackPanel.getAction()
-            if not cmd: cmd = 'command'
+            if not cmd: cmd = 'battery?'
             self.queueCmd(cmd)
             self.lastPeriodicTime =  now
         
+        if gv.iDetailPanel:
+            gv.iDetailPanel.periodic(now)
+
         # check the cmd send
         if not self.cmdQueue.empty():
             msg = self.cmdQueue.get()
@@ -373,10 +376,12 @@ class telloRespSer(threading.Thread):
         """ main loop to handle the data feed back."""
         while not self.terminate:
             data, _ = self.udpSer.recvfrom(1518)
+            if not data: break
             if isinstance(data, bytes):
                 data = data.decode(encoding="utf-8")
-            #print (data)
-            if not data: break
+                if gv.iDetailPanel:
+                    gv.iDetailPanel.updateDataStr(data)
+
         print('Tello state server terminated')
 
 #-----------------------------------------------------------------------------

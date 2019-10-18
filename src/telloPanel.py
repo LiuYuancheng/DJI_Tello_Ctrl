@@ -47,8 +47,9 @@ class PanelCam(wx.Panel):
 
 #-----------------------------------------------------------------------------
     def periodic(self, now):
-        if now - self.lastPeriodicTime >= 0.5:
+        if now - self.lastPeriodicTime >= 0.05:
             self.updateDisplay()
+            self.lastPeriodicTime = now
 
 #-----------------------------------------------------------------------------
     def updateCvFrame(self, cvFrame):
@@ -75,6 +76,7 @@ class PanelDetail(wx.Panel):
         self.SetBackgroundColour(wx.Colour(200, 200, 200))
         self.dataStr = "pitch: -;roll: -;yaw: -;vgx: -;vgy -;vgz: -;templ: -;temph: -;tof: -;h: -;bat: -;baro: -; time: -;agx: -;agy: -;agz: -; -"
         self.labelList = []
+        self.lastPeriodicTime = time.time()
         self.SetSizer(self._buidUISizer())
 
     def _buidUISizer(self):
@@ -91,7 +93,13 @@ class PanelDetail(wx.Panel):
             mSizer.Add(lb, flag=flagsR, border=2)
             mSizer.AddSpacer(5)
         return mSizer
-        
+    
+#-----------------------------------------------------------------------------
+    def periodic(self, now):
+        if now - self.lastPeriodicTime >= 0.5:
+            self.updateDisplay()
+            self.lastPeriodicTime = now
+
     def updateDataStr(self, dataStr):
         self.dataStr = dataStr
         
@@ -101,7 +109,7 @@ class PanelDetail(wx.Panel):
         for i, val in enumerate(dataList):
             self.labelList[i].SetLabel(' > ' + val)
         self.Refresh(False)
-        
+
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class TrackCtrlPanel(wx.Panel):
