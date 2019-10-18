@@ -53,6 +53,7 @@ class telloFrame(wx.Frame):
         self.connFlagS = False      # Sensor connection flag.
         self.cmdQueue = queue.Queue(maxsize=10)
         self.infoWindow = None      # drone detail information window.
+        self.stateFbStr = None      # drone feed back data string
         # Init the cmd/rsp UDP server.
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(gv.FB_IP)
@@ -233,6 +234,7 @@ class telloFrame(wx.Frame):
             self.connectLbD.SetBackgroundColour(wx.Colour('GREEN'))
             self.connFlagD = True
 
+#-----------------------------------------------------------------------------
     def updateSenConn(self, state):
         """ update the sensor connection state
         """
@@ -243,6 +245,35 @@ class telloFrame(wx.Frame):
             self.connectLbS.SetLabel(lbText)
             self.connectLbS.SetBackgroundColour(bgColor)
 
+    def updateBatterSt(self, pct):
+        """ update the battery state.
+        """
+        self.batteryLbD.SetLabel(" Battery:[%s]" %str(pct))
+        bg = wx.Colour(120, 120, 120)
+        if 0 < pct < 30 : bg = wx.Colour('RED')
+        if 30 <= pct < 60 : bg = wx.Colour('YELLOW')
+        if 60 <= pct : bg = wx.Colour('GREEN')
+        self.batteryLbD.SetBackgroundColour(bg)
+        self.batteryLbD.Refresh(True)
+
+#-----------------------------------------------------------------------------
+    def updateDataStr(self, dataStr):
+        """ update the drone state data feedback string.
+        """
+        self.stateFbStr = dataStr
+
+#-----------------------------------------------------------------------------
+    def getHtAndBat(self):
+        """ return the drone height and battery.
+        """
+        (h, b) = (0, 0)
+        if self.stateFbStr:
+            dataList = self.stateFbStr.split(';')
+            h = int(dataList[9].split(':')[1])
+            b = int(dataList[9].split(':')[1])
+        return (h, b)
+
+#-----------------------------------------------------------------------------
     def updateSenDis(self, state):
         (lbText, bgColor) = (' SEN_Att: Safe', wx.Colour('Green')) if state else (' SEN_Att: Unsafe', wx.Colour('RED'))
         self.senAttLb.SetLabel(lbText)
@@ -261,6 +292,8 @@ class telloFrame(wx.Frame):
             cmd = gv.iTrackPanel.getAction()
             if not cmd: cmd = 'command'
             self.queueCmd(cmd)
+            _, btPct = self.getHtAndBat()
+            self.updateBatterSt(btPct)
             self.lastPeriodicTime =  now
         
         if gv.iDetailPanel:
@@ -379,6 +412,7 @@ class telloRespSer(threading.Thread):
             if not data: break
             if isinstance(data, bytes):
                 data = data.decode(encoding="utf-8")
+                gv.iMainFrame.updateDataStr(data)
                 if gv.iDetailPanel:
                     gv.iDetailPanel.updateDataStr(data)
 
