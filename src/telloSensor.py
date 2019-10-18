@@ -63,9 +63,11 @@ class telloSensor(threading.Thread):
                     self.checkSumfh.close()
                 else:
                     self.attitude = self.getDistance()
-                    if gv.iSensorPanel: gv.iSensorPanel.updateInfo(alti=self.attitude)
                     if not self.attitude: break
-                    print(self.attitude)
+                    if gv.iSensorPanel: 
+                        print(self.attitude)
+                        gv.iSensorPanel.updateInfo(alti=self.attitude)
+                    
             if gv.iMainFrame: gv.iMainFrame.updateSenConn(False)
             print("Sensor disconnected.")
         print("TCP server terminat.")
@@ -123,7 +125,8 @@ class telloSensor(threading.Thread):
                 self.conn.sendall(str(address).encode('utf-8'))
                 data = self.conn.recv(1024).decode('utf-8')
                 if "," in data:
-                    ch, at = ch.split(',')
+                    ch, at = data.split(',')
+                    print("----- %s" %str((i, listLen)))
                     if (len(ch) == 2):
                         sigma += ch.upper()
                         self.attitude = at

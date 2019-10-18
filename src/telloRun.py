@@ -259,7 +259,7 @@ class telloFrame(wx.Frame):
         # Update the active cmd
         if self.connFlagD and now - self.lastPeriodicTime >= 5:
             cmd = gv.iTrackPanel.getAction()
-            if not cmd: cmd = 'battery?'
+            if not cmd: cmd = 'command'
             self.queueCmd(cmd)
             self.lastPeriodicTime =  now
         

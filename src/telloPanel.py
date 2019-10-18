@@ -247,7 +247,7 @@ class SensorCtrlPanel(wx.Panel):
         hbox0.AddSpacer(10)
         # row idx 1 : the patt attestation control display
         gs = wx.GridSizer(1, 6, 5, 5)
-        fbLbList = ('Iteration:', ' ','Generated Seed:', ' ', 'Altitude:', ' ')
+        fbLbList = ('Iteration:', ' - ','Generated Seed:', ' - ', 'Altitude:', ' - ')
         self.lbList = [wx.StaticText(self, label=val) for val in fbLbList]
         _ = [gs.Add(fblb, flag=flagsR, border=2) for fblb in self.lbList]
         mSizer.Add(gs, flag=flagsR, border=2)
@@ -276,12 +276,12 @@ class SensorCtrlPanel(wx.Panel):
 
 #-----------------------------------------------------------------------------
     def updateInfo(self, iterN=None, sead=None, alti=None):
-        if iterN is not None:
-            self.lbList[1].SetLabel(iterN)
-        if sead is not None:
-            self.lbList[3].SetLabel(sead)
-        if alti is not None:
-            self.lbList[5].SetLabel(alti)
+        if not iterN is None:
+            self.lbList[1].SetLabel(str(iterN))
+        if not sead is None:
+            self.lbList[3].SetLabel(str(sead))
+        if not alti is None:
+            self.lbList[5].SetLabel(str(alti))
 
     def updateProgress(self, val, tot):
         self.attesBar.SetValue(val*1000//tot)
