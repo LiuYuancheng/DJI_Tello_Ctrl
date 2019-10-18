@@ -56,16 +56,16 @@ class telloSensor(threading.Thread):
             print('Connection address:'+str(addr))
             while not self.terminate:
                 if self.iterTime > 0:
+                    if gv.iSensorPanel: gv.iSensorPanel.updateInfo(iterN=self.attitude)
                     self.checkSumfh = open("checkSumRecord.txt", 'a')
                     self.checkSumfh.write("checksum record [%s]: \n" %str(datetime.today()))
                     self.getCheckSum(self.blockNum)
                     self.checkSumfh.close()
                 else:
                     self.attitude = self.getDistance()
+                    if gv.iSensorPanel: gv.iSensorPanel.updateInfo(alti=self.attitude)
                     if not self.attitude: break
                     print(self.attitude)
-                # update the UI.
-                self.updateSensorUI()
             if gv.iMainFrame: gv.iMainFrame.updateSenConn(False)
             print("Sensor disconnected.")
         print("TCP server terminat.")
@@ -76,51 +76,62 @@ class telloSensor(threading.Thread):
         if self.conn:
             print('telloSensor  : send distance request.')
             self.conn.sendall(b'-1')
-            return self.conn.recv(1024)
+            return self.conn.recv(1024).decode('utf-8')
 
 #-----------------------------------------------------------------------------
     def getCheckSum(self, number_of_blocks):
         """ Get the local firmware checkSum and the sensor feed back checkSum."""
         # Get the random memory address.
         s_b_and_s_w = self._generate_sb_and_sw()
-        self.seedVal = seed_value = "Sb: %s, Sw %s" % (
+        self.seedVal = "Sb: %s, Sw %s" % (
             hex(s_b_and_s_w[0]), hex(s_b_and_s_w[1]))
-        print("telloSensor  : seed val: %s" % seed_value)
+        #print("telloSensor  : seed val: %s" % seed_value)
+        if gv.iSensorPanel: gv.iSensorPanel.updateInfo(sead=self.seedVal)
         rhos = self._generate_random_block_select_list(
             s_b_and_s_w[0], s_b_and_s_w[1], number_of_blocks)
         address_list = self._generate_all_address(
             s_b_and_s_w[1], rhos, number_of_blocks)
         # Get the firmware from the local pre-saved firmware.
         self.verifier_checksum = self._calculate_sigma_star(address_list)
+        if gv.iSensorPanel:  gv.iSensorPanel.updateChecksum(local=self.verifier_checksum)
         print("telloSensor : verifier check sum %s" %
               str(self.verifier_checksum))
         # Connect to the sensor to get the firmware check sum.
         self.sensor_checksum = self.getSensorCheckSum(address_list)
         print("telloSensor : sensor check sum %s" %
               str(self.verifier_checksum))
+        # recort the check sum to local file.
         self.checkSumfh.write(str(self.verifier_checksum)+"\n")
         self.checkSumfh.write(str(self.sensor_checksum) + "\n")
+        self.iterTime -= 1
         if str(self.verifier_checksum) != str(self.sensor_checksum):
             print("The check sum are different.")
-            self.iterTime = -1
+            gv.iMainFrame.updateSenDis(False)
             self.stated = 'unsafe'
         else:
             print("The check sum are same.")
-            self.iterTime -= 1
+            gv.iMainFrame.updateSenDis(True)
             self.stated = 'safe'
 
 #-----------------------------------------------------------------------------
     def getSensorCheckSum(self, address_list):
         """ Connect to the sensor and get the check sum."""
-        sigma = ''
-        for address in address_list:
+        sigma, listLen = '', len(address_list)
+        for i, address in enumerate(address_list):
             self.conn, _ = self.sock.accept()
             if self.conn:
                 self.conn.sendall(str(address).encode('utf-8'))
-                ch = self.conn.recv(1024).decode('utf-8')
-                if "," in ch and (len(ch.split(',')[0]) == 2):
-                    sigma = sigma + ch.split(',')[0].upper()
-                    self.attitude = ch.split(',')[1]
+                data = self.conn.recv(1024).decode('utf-8')
+                if "," in data:
+                    ch, at = ch.split(',')
+                    if (len(ch) == 2):
+                        sigma += ch.upper()
+                        self.attitude = at
+                        # Update the display area.
+                        if gv.iSensorPanel: 
+                            gv.iSensorPanel.updateChecksum(remote=ch.upper())
+                            gv.iSensorPanel.updateInfo(alti=self.attitude)
+                            gv.iSensorPanel.updateProgress(i, listLen)
         return sigma
 
 #-----------------------------------------------------------------------------
@@ -176,18 +187,6 @@ class telloSensor(threading.Thread):
         """ set the PATT parameters (int, int) """ 
         self.iterTime = int(iterNum)
         self.blockNum = int(blockNum)
-
-#-----------------------------------------------------------------------------
-    def updateSensorUI(self):
-        """ Update the sensor panel in the main UI."""
-        if gv.iSensorPanel:
-            dataSet = (self.iterTime,
-                       self.seedVal,
-                       self.stated,
-                       self.sensor_checksum,
-                       self.verifier_checksum,
-                       self.attitude)
-        gv.iSensorPanel.updateInfo(dataSet)
 
 #-----------------------------------------------------------------------------
     def stop(self):

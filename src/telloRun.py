@@ -45,7 +45,7 @@ class telloFrame(wx.Frame):
     """ DJI tello drone controler program."""
     def __init__(self, parent, id, title):
         """ Init the UI and parameters """
-        wx.Frame.__init__(self, parent, id, title, size=(510, 810))
+        wx.Frame.__init__(self, parent, id, title, size=(520, 810))
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
         self.SetIcon(wx.Icon(gv.ICO_PATH))
         
@@ -195,10 +195,10 @@ class telloFrame(wx.Frame):
         self.connectLbS.SetBackgroundColour(wx.Colour(120, 120, 120))
         mSizer.Add(self.connectLbS, flag=flagsR, border=2)
         mSizer.AddSpacer(5)
-        self.batteryLbS = wx.StaticText(
+        self.senAttLb = wx.StaticText(
             self, label=" SEN_Att: None".ljust(20))
-        self.batteryLbS.SetBackgroundColour(wx.Colour(120, 120, 120))
-        mSizer.Add(self.batteryLbS, flag=flagsR, border=2)
+        self.senAttLb.SetBackgroundColour(wx.Colour(120, 120, 120))
+        mSizer.Add(self.senAttLb, flag=flagsR, border=2)
         mSizer.AddSpacer(10)
         return mSizer
 
@@ -223,7 +223,7 @@ class telloFrame(wx.Frame):
         """
         self.sendMsg('command')
         if self.recvMsg() == 'ok':
-            self.connectLbD.SetLabel("UAV_Online".ljust(15))
+            self.connectLbD.SetLabel(" UAV_Online".ljust(15))
             self.connectLbD.SetBackgroundColour(wx.Colour('GREEN'))
             self.connFlagD = True
 
@@ -232,10 +232,15 @@ class telloFrame(wx.Frame):
         """
         if self.connFlagS != state:
             self.connFlagS = state
-            (lbText, bgColor) = ('SEN_Online', wx.Colour('Green')
+            (lbText, bgColor) = (' SEN_Online', wx.Colour('Green')
                                  ) if self.connFlagS else ('SEN_Offline', wx.Colour(120, 120, 120))
             self.connectLbS.SetLabel(lbText)
             self.connectLbS.SetBackgroundColour(bgColor)
+
+    def updateSenDis(self, state):
+        (lbText, bgColor) = (' SEN_Att: Safe', wx.Colour('Green')) if state else (' SEN_Att: Unsafe', wx.Colour('RED'))
+        self.senAttLb.SetLabel(lbText)
+        self.senAttLb.SetBackgroundColour(bgColor)
 
 #-----------------------------------------------------------------------------
     def periodic(self, event):

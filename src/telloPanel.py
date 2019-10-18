@@ -74,7 +74,7 @@ class TrackCtrlPanel(wx.Panel):
     """ Panel provides three Grids to show/set the all the PLCs' I/O data."""
     def __init__(self, parent):
         """ Init the panel."""
-        wx.Panel.__init__(self, parent, size=(500, 70))
+        wx.Panel.__init__(self, parent, size=(510, 70))
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
         self.selectTrack = 'None'
         self.trackLbs = []
@@ -175,74 +175,78 @@ class TrackCtrlPanel(wx.Panel):
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class SensorCtrlPanel(wx.Panel):
-    """ Panel provides three Grids to show/set the all the PLCs' I/O data."""
+    """ Panel to do the sensor control."""
     def __init__(self, parent):
         """ Init the panel."""
         wx.Panel.__init__(self, parent, size=(500, 160))
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
-        self.fbLbList = ['Iteration:', 'Generated Seed:', 'Altitude:']
         self.SetSizer(self._buidUISizer())
 
 #-----------------------------------------------------------------------------
     def _buidUISizer(self):
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
-        flagsC = wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_CENTER_VERTICAL
         mSizer = wx.BoxSizer(wx.VERTICAL)
-        bhox4 = wx.BoxSizer(wx.HORIZONTAL)
-        bhox4.AddSpacer(5)
-        bhox4.Add(wx.StaticText(
-            self, label="Sensor Control: ".ljust(15)), flag=flagsR, border=2)
-        bhox4.AddSpacer(5)
-        bhox4.Add(wx.StaticText(self, label="Iteration Number: "),
-                  flag=flagsR, border=2)
-        self.iterN = wx.TextCtrl(
-            self, -1, "1", size=(50, -1), style=wx.TE_PROCESS_ENTER)
-        bhox4.Add(self.iterN, flag=flagsR, border=2)
-        bhox4.AddSpacer(5)
-        bhox4.Add(wx.StaticText(self, label="Value of block: "),
-                  flag=flagsR, border=2)
-        self.blockN = wx.TextCtrl(
-            self, -1, "4", size=(50, -1), style=wx.TE_PROCESS_ENTER)
-        bhox4.Add(self.blockN, flag=flagsR, border=2)
-        bhox4.AddSpacer(5)
+        # row idx 0 : basic patt setting.
+        hbox0 = wx.BoxSizer(wx.HORIZONTAL)
+        hbox0.Add(wx.StaticText(self, label="Sensor Control: ".ljust(15)), flag=flagsR, border=2)
+        hbox0.AddSpacer(10)
+        hbox0.Add(wx.StaticText(self, label="Iteration Number: "),flag=flagsR, border=2)
+        self.iterN = wx.TextCtrl(self, -1, "1", size=(40, -1), style=wx.TE_PROCESS_ENTER)
+        hbox0.Add(self.iterN, flag=flagsR, border=2)
+        hbox0.AddSpacer(10)
+        hbox0.Add(wx.StaticText(self, label="Block Value: "),flag=flagsR, border=2)
+        self.blockN = wx.TextCtrl( self, -1, "4", size=(40, -1), style=wx.TE_PROCESS_ENTER)
+        hbox0.Add(self.blockN, flag=flagsR, border=2)
+        hbox0.AddSpacer(10)
         self.pattBt = wx.Button(self, label='StartPatt', size=(90, 25))
-
         self.pattBt.Bind(wx.EVT_BUTTON, self.onPattCheck)
-
-        bhox4.Add(self.pattBt, flag=flagsR, border=2)
-        mSizer.Add(bhox4, flag=flagsR, border=2)
-        bhox4.AddSpacer(5)
-        gs = wx.GridSizer(1, 3, 5, 5)
-        self.lbList = []
-        for val in self.fbLbList:
-            fblb = wx.StaticText(self, label=str(val).ljust(40))
-            self.lbList.append(fblb)
-            gs.Add(fblb, flag=flagsR, border=2)
+        hbox0.Add(self.pattBt, flag=flagsR, border=2)
+        mSizer.Add(hbox0, flag=flagsR, border=2)
+        hbox0.AddSpacer(10)
+        # row idx 1 : the patt attestation control display
+        gs = wx.GridSizer(1, 6, 5, 5)
+        fbLbList = ('Iteration:', ' ','Generated Seed:', ' ', 'Altitude:', ' ')
+        self.lbList = [wx.StaticText(self, label=val) for val in fbLbList]
+        _ = [gs.Add(fblb, flag=flagsR, border=2) for fblb in self.lbList]
         mSizer.Add(gs, flag=flagsR, border=2)
-
+        hbox0.AddSpacer(5)
         mSizer.Add(wx.StaticText(self, label="Local Firmware Sample CheckSum: "),flag=flagsR, border=2)
-        self.chSmTCL = wx.TextCtrl(self, size=(480, 25), style=wx.TE_MULTILINE)
+        self.chSmTCL = wx.TextCtrl(self, size=(480, 25))#, style=wx.TE_MULTILINE)
         mSizer.Add(self.chSmTCL,flag=flagsR, border=2)
-
         mSizer.AddSpacer(5)
         self.attesBar = wx.Gauge(self, range=1000, size=(480, 17), style=wx.GA_HORIZONTAL)
         mSizer.Add(self.attesBar,flag=flagsR, border=2)
-
         mSizer.Add(wx.StaticText(self, label="Sensor Final Firmware CheckSum: "),flag=flagsR, border=2)
-        self.chSmTCS = wx.TextCtrl(self, size=(480, 25), style=wx.TE_MULTILINE)
+        self.chSmTCS = wx.TextCtrl(self, size=(480, 25))
         mSizer.Add(self.chSmTCS,flag=flagsR, border=2)
         return mSizer
 
 #-----------------------------------------------------------------------------
     def onPattCheck(self, event):
-        iterN = self.iterN.GetValue()
-        blockN = self.blockN.GetValue()
+        iterN = int(self.iterN.GetValue())
+        blockN = int(self.blockN.GetValue())
+        self.chSmTCL.Clear()
+        self.chSmTCS.Clear()
+        self.attesBar.SetValue(10)
         print('Patt setting : %s' %str((iterN, blockN)))
         if gv.iSensorChecker:
-            gv.iSensorChecker.setPattParameter(int(iterN), int(blockN))
-
+            gv.iSensorChecker.setPattParameter(iterN, blockN)
 
 #-----------------------------------------------------------------------------
-    def updateInfo(self, infoList):
-        for i, val in enumerate(infoList):
-            self.lbList[i].SetLabel( str( str(self.fbLbList[i]) + ' '+ str(val)).ljust(40))
+    def updateInfo(self, iterN=None, sead=None, alti=None):
+        if iterN is not None:
+            self.lbList[1].SetLabel(iterN)
+        if sead is not None:
+            self.lbList[3].SetLabel(sead)
+        if alti is not None:
+            self.lbList[5].SetLabel(alti)
+
+    def updateProgress(self, val, tot):
+        self.attesBar.SetValue(val*1000//tot)
+
+#-----------------------------------------------------------------------------
+    def updateChecksum(self, local=None, remote=None):
+        if local:
+            self.chSmTCL.AppendText(local)
+        if remote:
+            self.chSmTCS.AppendText(remote)
