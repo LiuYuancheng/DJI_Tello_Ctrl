@@ -68,6 +68,40 @@ class PanelCam(wx.Panel):
         self.Refresh(False)
         self.Update()
 
+class PanelDetail(wx.Panel):
+    """ Tello drone camera image display panel."""
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent,  size=(130, 500))
+        self.SetBackgroundColour(wx.Colour(200, 200, 200))
+        self.dataStr = "pitch: -;roll: -;yaw: -;vgx: -;vgy -;vgz: -;templ: -;temph: -;tof: -;h: -;bat: -;baro: -; time: -;agx: -;agy: -;agz: -; -"
+        self.labelList = []
+        self.SetSizer(self._buidUISizer())
+
+    def _buidUISizer(self):
+        mSizer = wx.BoxSizer(wx.VERTICAL)
+        flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
+        mSizer.AddSpacer(5)
+        mSizer.Add(wx.StaticText(self, label="Detail Info:"), flag=flagsR, border=2)
+        mSizer.AddSpacer(5)
+        mSizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(130, -1),style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
+        mSizer.AddSpacer(10)
+        for val in self.dataStr.split(';'):
+            lb = wx.StaticText(self, label=' > ' + val)
+            self.labelList.append(lb)
+            mSizer.Add(lb, flag=flagsR, border=2)
+            mSizer.AddSpacer(5)
+        return mSizer
+        
+    def updateDataStr(self, dataStr):
+        self.dataStr = dataStr
+        
+    def updateDisplay(self):
+        dataList = self.dataStr.split(';')
+        if len(dataList) != len(self.labelList): return
+        for i, val in enumerate(dataList):
+            self.labelList[i].SetLabel(' > ' + val)
+        self.Refresh(False)
+        
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class TrackCtrlPanel(wx.Panel):

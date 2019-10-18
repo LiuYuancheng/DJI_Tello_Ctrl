@@ -52,6 +52,7 @@ class telloFrame(wx.Frame):
         self.connFlagD = False      # Drone connection flag.
         self.connFlagS = False      # Sensor connection flag.
         self.cmdQueue = queue.Queue(maxsize=10)
+        self.infoWindow = None      # drone detail information window.
         # Init the cmd/rsp UDP server.
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(gv.FB_IP)
@@ -84,6 +85,8 @@ class telloFrame(wx.Frame):
         """ Build the main UI sizer of the frame."""
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
         flagsC = wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_CENTER_VERTICAL
+
+
         mSizer = wx.BoxSizer(wx.VERTICAL)
         mSizer.AddSpacer(5)
         # Row Idx = 0 : Statue diaplay
@@ -178,7 +181,7 @@ class telloFrame(wx.Frame):
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
         mSizer = wx.BoxSizer(wx.HORIZONTAL)
         mSizer.AddSpacer(5)
-        self.connectBt = wx.Button(self, label='UAV_Connect', size=(90, 20))
+        self.connectBt = wx.Button(self, label='UAV Connect', size=(90, 20))
         self.connectBt.Bind(wx.EVT_BUTTON, self.onConnect)
         mSizer.Add(self.connectBt, flag=flagsR, border=2)
         mSizer.AddSpacer(5)
@@ -187,7 +190,7 @@ class telloFrame(wx.Frame):
         mSizer.Add(self.connectLbD, flag=flagsR, border=2)
         mSizer.AddSpacer(5)
         self.batteryLbD = wx.StaticText(
-            self, label=" UAV_Battery:[0%]".ljust(20))
+            self, label=" Battery:[000%]".ljust(20))
         self.batteryLbD.SetBackgroundColour(wx.Colour(120, 120, 120))
         mSizer.Add(self.batteryLbD, flag=flagsR, border=2)
         mSizer.AddSpacer(5)
@@ -199,6 +202,9 @@ class telloFrame(wx.Frame):
             self, label=" SEN_Att: None".ljust(20))
         self.senAttLb.SetBackgroundColour(wx.Colour(120, 120, 120))
         mSizer.Add(self.senAttLb, flag=flagsR, border=2)
+        self.detailBt =  wx.Button(self, label='>>', size=(30, 20))
+        self.detailBt.Bind(wx.EVT_BUTTON, self.showDetail)
+        mSizer.Add(self.detailBt, flag=flagsR, border=2)
         mSizer.AddSpacer(10)
         return mSizer
 
@@ -287,6 +293,27 @@ class telloFrame(wx.Frame):
         """ Send the control cmd to the drone directly."""
         self.sock.sendto(msg.encode(encoding="utf-8"), gv.CT_IP)
 
+#--PanelBaseInfo---------------------------------------------------------------
+    def showDetail(self, event):
+        """ Pop up the detail window to show all the sensor parameters value."""
+        if self.infoWindow is None and gv.iDetailPanel is None:
+            posF = gv.iMainFrame.GetPosition()
+            self.infoWindow = wx.MiniFrame(gv.iMainFrame, -1,
+                'UAV Detail', pos=(posF[0]+511, posF[1]),
+                size=(130, 500),
+                style=wx.DEFAULT_FRAME_STYLE)
+            gv.iDetailPanel = tp.PanelDetail(self.infoWindow)
+            self.infoWindow.Bind(wx.EVT_CLOSE, self.infoWinClose)
+            self.infoWindow.Show()
+
+#--PanelBaseInfo---------------------------------------------------------------
+    def infoWinClose(self, event):
+        """ Close the pop-up detail information window"""
+        if self.infoWindow:
+            self.infoWindow.Destroy()
+            gv.iDetailPanel = None
+            self.infoWindow = None
+
 #-----------------------------------------------------------------------------
     def OnClose(self, event):
         #self.ser.close()
@@ -363,8 +390,8 @@ class telloRespSer(threading.Thread):
 #-----------------------------------------------------------------------------
 class MyApp(wx.App):
     def OnInit(self):
-        mainFrame = telloFrame(None, -1, gv.APP_NAME)
-        mainFrame.Show(True)
+        gv.iMainFrame = telloFrame(None, -1, gv.APP_NAME)
+        gv.iMainFrame.Show(True)
         return True
 
 app = MyApp(0)

@@ -68,6 +68,7 @@ BOOT_LOADER_OFFSET = 256
 
 #-------<GLOBAL PARAMTERS>-----------------------------------------------------
 iCamPanel = None        # Camera display panel
+iDetailPanel = None     # Drone detail information panel.
 iMainFrame = None       # Main UI frame.
 iTrackPanel = None      # Track control panel.
 iSensorPanel = None     # Sensor control panel.
