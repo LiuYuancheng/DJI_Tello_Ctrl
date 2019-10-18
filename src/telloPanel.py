@@ -23,6 +23,7 @@ class PanelCam(wx.Panel):
         wx.Panel.__init__(self, parent,  size=(480, 360))
         self.SetBackgroundColour(wx.Colour(200, 200, 200))
         self.lastPeriodicTime = time.time()
+        self.heigh = self.battery = 0
         self.bmp = wx.Bitmap(480, 360)
         self.Bind(wx.EVT_PAINT, self.onPaint)
         self.SetDoubleBuffered(True)
@@ -36,6 +37,9 @@ class PanelCam(wx.Panel):
         dc.DrawLine(240, 0, 240, 180)
         dc.DrawLine(0, 180, 480, 180)
         _ = [dc.DrawLine(220+5*i, 200+20*i, 260-5*i, 200+20*i) for i in range(4)] # draw the lvl line.
+        dc.SetTextForeground(wx.Colour('GREEN'))
+        dc.DrawText('H: %s' %str(self.heigh) , 250, 260)
+        dc.DrawText('Battery: %s' %str(self.battery) , 20, 20)
 
 #-----------------------------------------------------------------------------
     def scale_bitmap(self, bitmap, width, height):
@@ -48,6 +52,7 @@ class PanelCam(wx.Panel):
 #-----------------------------------------------------------------------------
     def periodic(self, now):
         if now - self.lastPeriodicTime >= 0.05:
+            (self.heigh, self.battery) = gv.iMainFrame.getHtAndBat()
             self.updateDisplay()
             self.lastPeriodicTime = now
 
@@ -247,7 +252,7 @@ class SensorCtrlPanel(wx.Panel):
         hbox0.AddSpacer(10)
         # row idx 1 : the patt attestation control display
         gs = wx.GridSizer(1, 6, 5, 5)
-        fbLbList = ('Iteration:', ' - ','Generated Seed:', ' - ', 'Altitude:', ' - ')
+        fbLbList = ('Iteration:', ' - ','SeedVal:', ' - ', 'Altitude:', ' - ')
         self.lbList = [wx.StaticText(self, label=val) for val in fbLbList]
         _ = [gs.Add(fblb, flag=flagsR, border=2) for fblb in self.lbList]
         mSizer.Add(gs, flag=flagsR, border=2)
