@@ -248,6 +248,7 @@ class telloFrame(wx.Frame):
     def updateBatterSt(self, pct):
         """ update the battery state.
         """
+        print(str(pct))
         self.batteryLbD.SetLabel(" Battery:[%s]" %str(pct))
         bg = wx.Colour(120, 120, 120)
         if 0 < pct < 30 : bg = wx.Colour('RED')
@@ -270,7 +271,7 @@ class telloFrame(wx.Frame):
         if self.stateFbStr:
             dataList = self.stateFbStr.split(';')
             h = int(dataList[9].split(':')[1])
-            b = int(dataList[9].split(':')[1])
+            b = int(dataList[10].split(':')[1])
         return (h, b)
 
 #-----------------------------------------------------------------------------
