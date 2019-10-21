@@ -10,6 +10,7 @@ const int echoPin = 0; //D3
 const int trigPin = 2; //D4
 
 int distance;
+int addrCount;
 long duration;
 
 const char *host = "192.168.1.100"; // IP serveur - Server IP
@@ -76,13 +77,14 @@ void setup()
         Serial.println("OTA Pass");
     }
   });
-  
+
   ArduinoOTA.begin();
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT);  // Sets the echoPin as an Input
   Serial.println("Ready");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+  addrCount = 0;
 }
 
 void loop()
@@ -105,7 +107,7 @@ void loop()
   delay(10);
 
   while(client.connected())
-  { 
+  {
     ArduinoOTA.handle();
     digitalWrite(trigPin, LOW);
     delayMicroseconds(2);
@@ -120,25 +122,51 @@ void loop()
       }
     String line = client.readStringUntil('\r');
     line.trim();
-    long tmp = line.toInt();
-    if (tmp == -1)
-    {
-      Serial.println(dist);
-      client.print(dist);
+
+    if(addrCount == 0){
+      long tmp = line.toInt();
+      if (tmp == -1)
+      {
+        Serial.println(dist);
+        client.print(dist);
+      }
+      else{
+        addrCount = tmp;
+      }
     }
     else
     {
-      uint32_t incomingValue = (uint32_t)tmp;
-      Serial.println(incomingValue);
-      uint32_t data;
-      ESP.flashRead(incomingValue, &data, 1);
-      String x = String(data, HEX);
-      x = x.substring(x.length() - 2, x.length());
-      x = x + "," + dist;
-      Serial.println(x);
-      client.print(x);
+      String chsm = "";
+      for (int i = 0; i < addrCount; i++) {
+        String sub  = getValue(line,';',i);
+        long tmp = sub.toInt();
+        uint32_t incomingValue = (uint32_t)tmp;
+        Serial.println(incomingValue);
+        uint32_t data;
+        ESP.flashRead(incomingValue, &data, 1);
+        String x = String(data, HEX);
+        x = x.substring(x.length() - 2, x.length());
+        chsm = chsm + x;
+      }
+      chsm = chsm +','+dist;
+      addrCount = 0; // clear the address count.
+      client.print(chsm);
     }
   }
 }
 
-patt
+String getValue(String data, char separator, int index)
+{
+  int found = 0;
+  int strIndex[] = {0, -1};
+  int maxIndex = data.length()-1;
+
+  for(int i=0; i<=maxIndex && found<=index; i++){
+    if(data.charAt(i)==separator || i==maxIndex){
+        found++;
+        strIndex[0] = strIndex[1]+1;
+        strIndex[1] = (i == maxIndex) ? i+1 : i;
+    }
+  }
+  return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
