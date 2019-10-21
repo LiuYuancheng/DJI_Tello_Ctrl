@@ -121,21 +121,22 @@ class telloSensor(threading.Thread):
     def getSensorCheckSum(self, address_list):
         """ Connect to the sensor and get the check sum."""
         sigma, listLen = '', len(address_list)
-        for i, address in enumerate(address_list):
-            if self.conn:
-                self.conn.sendall(str(address).encode('utf-8'))
-                data = self.conn.recv(1024).decode('utf-8')
-                if "," in data:
-                    ch, at = data.split(',')
-                    print("----- %s" %str((i, listLen)))
-                    if (len(ch) == 2):
-                        sigma += ch.upper()
-                        self.attitude = at
-                        # Update the display area.
-                        if gv.iSensorPanel: 
-                            gv.iSensorPanel.updateChecksum(remote=ch.upper())
-                            gv.iSensorPanel.updateInfo(alti=self.attitude)
-                            gv.iSensorPanel.updateProgress(i, listLen)
+        if self.conn:
+            self.conn.sendall(str(listLen).encode('utf-8'))
+            data = self.conn.recv(1024).decode('utf-8')
+            msg = str(''.join(address_list)).encode('utf-8')
+            self.conn.sendall(msg)
+            data = self.conn.recv(1024).decode('utf-8')
+            if "," in data:
+                ch, at = data.split(',')
+                print("----- %s" %str((ch)))
+                sigma += ch.upper()
+                self.attitude = at
+                # Update the display area.
+                if gv.iSensorPanel: 
+                    gv.iSensorPanel.updateChecksum(remote=ch.upper())
+                    gv.iSensorPanel.updateInfo(alti=self.attitude)
+                    gv.iSensorPanel.updateProgress(999, listLen)
         return sigma
 
 #-----------------------------------------------------------------------------
