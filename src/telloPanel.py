@@ -3,7 +3,7 @@
 # Name:        TelloPanel.py
 #
 # Purpose:     This function is used to create the control or display panel for
-#              the UAV system.
+#              the UAV system (drone control and sensor firmware attestation).
 # Author:      Yuancheng Liu
 #
 # Created:     2019/10/01
@@ -36,14 +36,15 @@ class PanelCam(wx.Panel):
         dc.SetPen(wx.Pen('GREEN', width=1, style=wx.PENSTYLE_DOT))
         dc.DrawLine(240, 0, 240, 180)
         dc.DrawLine(0, 180, 480, 180)
-        _ = [dc.DrawLine(220+5*i, 200+20*i, 260-5*i, 200+20*i) for i in range(4)] # draw the lvl line.
+        # draw the horizontal indicator line.
+        _ = [dc.DrawLine(220+5*i, 200+20*i, 260-5*i, 200+20*i) for i in range(4)]
         dc.SetTextForeground(wx.Colour('GREEN'))
-        dc.DrawText('H: %s' %str(self.heigh) , 250, 260)
-        dc.DrawText('Battery: %s' %str(self.battery) , 20, 20)
+        dc.DrawText('H: %s' % str(self.heigh), 250, 260)
+        dc.DrawText('Battery: %s' % str(self.battery), 20, 20)
 
 #-----------------------------------------------------------------------------
     def scale_bitmap(self, bitmap, width, height):
-        """ resize the bitmap """
+        """ Resize the input bitmap."""
         image = wx.ImageFromBitmap(bitmap)
         image = image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
         result = wx.BitmapFromImage(image)
@@ -52,6 +53,7 @@ class PanelCam(wx.Panel):
 #-----------------------------------------------------------------------------
     def periodic(self, now):
         if now - self.lastPeriodicTime >= 0.05:
+            """ Update the camera under 20 fps. """
             (self.heigh, self.battery) = gv.iMainFrame.getHtAndBat()
             self.updateDisplay()
             self.lastPeriodicTime = now
@@ -74,8 +76,10 @@ class PanelCam(wx.Panel):
         self.Refresh(False)
         self.Update()
 
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 class PanelDetail(wx.Panel):
-    """ Tello drone camera image display panel."""
+    """ Panel to show the detail information of the drone."""
     def __init__(self, parent):
         wx.Panel.__init__(self, parent,  size=(130, 500))
         self.SetBackgroundColour(wx.Colour(200, 200, 200))
@@ -84,13 +88,17 @@ class PanelDetail(wx.Panel):
         self.lastPeriodicTime = time.time()
         self.SetSizer(self._buidUISizer())
 
+#-----------------------------------------------------------------------------
     def _buidUISizer(self):
+        """  Build the main UI sizer for the panel."""
         mSizer = wx.BoxSizer(wx.VERTICAL)
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
         mSizer.AddSpacer(5)
-        mSizer.Add(wx.StaticText(self, label="Detail Info:"), flag=flagsR, border=2)
+        mSizer.Add(wx.StaticText(self, label="Detail Info:"),
+                   flag=flagsR, border=2)
         mSizer.AddSpacer(5)
-        mSizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(130, -1),style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
+        mSizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(130, -1),
+                                 style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
         mSizer.AddSpacer(10)
         for val in self.dataStr.split(';'):
             lb = wx.StaticText(self, label=' > ' + val)
@@ -98,19 +106,22 @@ class PanelDetail(wx.Panel):
             mSizer.Add(lb, flag=flagsR, border=2)
             mSizer.AddSpacer(5)
         return mSizer
-    
+
 #-----------------------------------------------------------------------------
     def periodic(self, now):
+        """ Periodic call back, update every 0.5 sec."""
         if now - self.lastPeriodicTime >= 0.5:
             self.updateDisplay()
             self.lastPeriodicTime = now
 
+#-----------------------------------------------------------------------------
     def updateDataStr(self, dataStr):
         self.dataStr = dataStr
-        
+
+#-----------------------------------------------------------------------------
     def updateDisplay(self):
         dataList = self.dataStr.split(';')
-        if len(dataList) != len(self.labelList): return
+        if len(dataList) != len(self.labelList): return # check whether data match.
         for i, val in enumerate(dataList):
             self.labelList[i].SetLabel(' > ' + val)
         self.Refresh(False)
@@ -118,7 +129,9 @@ class PanelDetail(wx.Panel):
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class TrackCtrlPanel(wx.Panel):
-    """ Panel provides three Grids to show/set the all the PLCs' I/O data."""
+    """ Panel for used to select the track and show the auto-tracking progress.
+        TODO: will added the track editing function.
+    """
     def __init__(self, parent):
         """ Init the panel."""
         wx.Panel.__init__(self, parent, size=(510, 70))
@@ -126,7 +139,7 @@ class TrackCtrlPanel(wx.Panel):
         self.selectTrack = 'None'
         self.trackLbs = []
         self.trackDict = {'None': ['-']*15}
-        self.actionIdx = -1
+        self.actionIdx = -1 # current executing action's idx in the track.
         self.loadTrack()
         self.SetSizer(self._buidUISizer())
         self.Refresh(False)
