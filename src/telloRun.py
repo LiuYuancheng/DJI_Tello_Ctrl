@@ -231,7 +231,7 @@ class telloFrame(wx.Frame):
         """ Update the UI drone battery state."""
         self.batteryLbD.SetLabel(" Battery:[%s]".ljust(20) % str(pct).zfill(3))
         bgcolor = ('GRAY', 'RED', 'YELLOW', 'GREEN')
-        self.batteryLbD.SetBackgroundColour(wx.Colour(min(bgcolor//30, 3)))
+        self.batteryLbD.SetBackgroundColour(wx.Colour(bgcolor[min(pct//30, 3)]))
         self.batteryLbD.Refresh(True)
 
 #-----------------------------------------------------------------------------
@@ -378,7 +378,7 @@ class telloRespSer(threading.Thread):
             if not data: break
             if isinstance(data, bytes):
                 data = data.decode(encoding="utf-8")
-                gv.iMainFrame.updateDataStr(data)
+                if gv.iMainFrame: gv.iMainFrame.updateDataStr(data)
                 if gv.iDetailPanel: gv.iDetailPanel.updateDataStr(data)
         print('Tello state server terminated')
 

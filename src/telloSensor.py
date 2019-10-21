@@ -63,7 +63,9 @@ class telloSensor(threading.Thread):
                     self.checkSumfh.close()
                 else:
                     self.attitude = self.getDistance()
-                    if not self.attitude: break
+                    print('--' +str(self.attitude))
+                    if not self.attitude: 
+                        break
                     if gv.iSensorPanel: 
                         print(self.attitude)
                         gv.iSensorPanel.updateInfo(alti=self.attitude)
@@ -120,7 +122,6 @@ class telloSensor(threading.Thread):
         """ Connect to the sensor and get the check sum."""
         sigma, listLen = '', len(address_list)
         for i, address in enumerate(address_list):
-            self.conn, _ = self.sock.accept()
             if self.conn:
                 self.conn.sendall(str(address).encode('utf-8'))
                 data = self.conn.recv(1024).decode('utf-8')
