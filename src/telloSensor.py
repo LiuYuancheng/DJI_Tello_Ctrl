@@ -124,7 +124,8 @@ class telloSensor(threading.Thread):
         if self.conn:
             self.conn.sendall(str(listLen).encode('utf-8'))
             data = self.conn.recv(1024).decode('utf-8')
-            msg = str(''.join(address_list)).encode('utf-8')
+            address_list = [str(i) for i in address_list]
+            msg = str(';'.join(address_list)).encode('utf-8')
             self.conn.sendall(msg)
             data = self.conn.recv(1024).decode('utf-8')
             if "," in data:
