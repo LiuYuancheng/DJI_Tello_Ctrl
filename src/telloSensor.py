@@ -104,7 +104,7 @@ class telloSensor(threading.Thread):
             print("The check sum are different.")
             gv.iMainFrame.updateSenDis(False)
             self.stated = 'unsafe'
-            self.iterTime -= 0 # stop iteration if the attesation find unsafe.
+            self.iterTime = 0 # stop iteration if the attesation find unsafe.
         else:
             print("The check sum are same.")
             gv.iMainFrame.updateSenDis(True)
@@ -128,7 +128,7 @@ class telloSensor(threading.Thread):
                 # Update the display area.
                 if gv.iSensorPanel: 
                     gv.iSensorPanel.updateChecksum(remote=ch.upper())
-                    gv.iSensorPanel.updateInfo(alti=self.attitude, timeU = str(time.time()-timeU))
+                    gv.iSensorPanel.updateInfo(iterN = self.iterTime, alti=self.attitude, timeU = str(time.time()-timeU))
                     gv.iSensorPanel.updateProgress(64, listLen)
         return sigma
 

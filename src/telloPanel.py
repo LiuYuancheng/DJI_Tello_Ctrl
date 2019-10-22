@@ -305,6 +305,7 @@ class SensorCtrlPanel(wx.Panel):
         if not sead is None: self.lbList[3].SetLabel(str(sead))
         if not alti is None: self.lbList[5].SetLabel(str(alti))
         if not timeU is None: self.lbList[7].SetLabel(str(timeU))
+        self.Refresh(False)
 
 #-----------------------------------------------------------------------------
     def updateProgress(self, val, tot):
