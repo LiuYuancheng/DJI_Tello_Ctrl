@@ -90,7 +90,7 @@ class PanelDetail(wx.Panel):
 
 #-----------------------------------------------------------------------------
     def _buidUISizer(self):
-        """  Build the main UI sizer for the panel."""
+        """ Build the main UI sizer for the panel."""
         mSizer = wx.BoxSizer(wx.VERTICAL)
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
         mSizer.AddSpacer(5)
@@ -123,7 +123,7 @@ class PanelDetail(wx.Panel):
         dataList = self.dataStr.split(';')
         if len(dataList) != len(self.labelList): return # check whether data match.
         for i, val in enumerate(dataList):
-            self.labelList[i].SetLabel(' > ' + val)
+            self.labelList[i].SetLabel(' >  %s'  %val)
         self.Refresh(False)
 
 #-----------------------------------------------------------------------------
@@ -142,36 +142,38 @@ class TrackCtrlPanel(wx.Panel):
         self.actionIdx = -1 # current executing action's idx in the track.
         self.loadTrack()
         self.SetSizer(self._buidUISizer())
+        self.onTrackSel(None)
         self.Refresh(False)
 
 #-----------------------------------------------------------------------------
     def _buidUISizer(self):
+        """ Build the main UI sizer for the panel."""
         mSizer = wx.BoxSizer(wx.VERTICAL)
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
         flagsC = wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_CENTER_VERTICAL
-        bhox3 = wx.BoxSizer(wx.HORIZONTAL)
-        bhox3.Add(wx.StaticText(
+        # Row Idx 0 : Track control area.
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.Add(wx.StaticText(
             self, label="Track Control:".ljust(15)), flag=flagsC, border=2)
-        bhox3.AddSpacer(5)
+        hbox.AddSpacer(5)
         self.trackCtrl = wx.ComboBox(
             self, -1, choices=list(self.trackDict.keys()),size=(90, 22), style=wx.CB_READONLY)
         self.trackCtrl.SetSelection(1)
         self.trackCtrl.Bind(wx.EVT_COMBOBOX, self.onTrackSel)
-        bhox3.Add(self.trackCtrl, flag=flagsR, border=2)
-        bhox3.AddSpacer(5)
+        hbox.Add(self.trackCtrl, flag=flagsR, border=2)
+        hbox.AddSpacer(5)
         self.trackAcBt = wx.Button(self, label='ActiveTrack', size=(90, 22))
-        bhox3.Add(self.trackAcBt, flag=flagsR, border=2)
-        bhox3.AddSpacer(5)
+        hbox.Add(self.trackAcBt, flag=flagsR, border=2)
+        hbox.AddSpacer(5)
         self.trackAcBt.Bind(wx.EVT_BUTTON, self.onTrackAct)
-
         self.trackEdBt = wx.Button(self, label='EditTrack', size=(90, 22))
-        bhox3.Add(self.trackEdBt, flag=flagsR, border=2)
-        bhox3.AddSpacer(5)
+        hbox.Add(self.trackEdBt, flag=flagsR, border=2)
+        hbox.AddSpacer(5)
         self.trackAnBt = wx.Button(self, label='AddNewTrack', size=(90, 22))
-        bhox3.Add(self.trackAnBt, flag=flagsR, border=2)
-        mSizer.Add(bhox3, flag=flagsR, border=2)
+        hbox.Add(self.trackAnBt, flag=flagsR, border=2)
+        mSizer.Add(hbox, flag=flagsR, border=2)
         mSizer.AddSpacer(5)
-        # track display area:
+        # Row Idx 2: Track display area
         gs = wx.GridSizer(2, 8, 5, 5)
         gs.Add(wx.StaticText(self, label="Track:".ljust(12)), flag=flagsC, border=2)
         for val in self.trackDict[self.selectTrack]:
@@ -183,20 +185,46 @@ class TrackCtrlPanel(wx.Panel):
         return mSizer
 
 #-----------------------------------------------------------------------------
+    def getAction(self):
+        """ Return the action drone need to do for the current track."""
+        if self.selectTrack == 'None' or self.actionIdx == -1:
+            return None
+        else:
+            cmdList = self.trackDict[self.selectTrack]
+            if self.actionIdx == len(cmdList):
+                self.trackLbs[self.actionIdx-1].SetBackgroundColour(wx.Colour(200, 200, 200))
+                self.Refresh(False)
+                self.actionIdx = -1
+                return 'land' # send land if 'land' cmd is not in the track.
+            else:
+                cmd = cmdList[self.actionIdx]
+                self.trackLbs[self.actionIdx].SetBackgroundColour(wx.Colour('GREEN'))
+                if self.actionIdx > 0: self.trackLbs[self.actionIdx-1].SetBackgroundColour(wx.Colour(200, 200, 200))
+                self.Refresh(False)
+                self.actionIdx += 1
+                return cmd
+
+#-----------------------------------------------------------------------------
     def loadTrack(self):
-        """ Load the track from the track file.
-        """
+        """ Load the track from the track file."""
         f = open(gv.TRACK_PATH, "r")
         fh = f.readlines()
         for line in fh:
             parms = line.split(';')
             key, val = parms[0], parms[1:]
             self.trackDict[key] = val
-        print(self.trackDict.keys())
+        print("Loaded tracks from file: %s" %str (self.trackDict.keys()))
         f.close()
 
 #-----------------------------------------------------------------------------
+    def onTrackAct(self, event):
+        """ Acticve the selected track.(set the track action to idx=0)"""
+        self.actionIdx = 0 if self.selectTrack != 'None' else -1
+        print("Active track: %s" %self.selectTrack)
+
+#-----------------------------------------------------------------------------
     def onTrackSel(self, event):
+        """ Handle the track selection. """
         sel = self.trackCtrl.GetSelection()
         self.selectTrack = self.trackCtrl.GetString(sel)
         self.trackAcBt.Enable(self.selectTrack != 'None')
@@ -209,33 +237,9 @@ class TrackCtrlPanel(wx.Panel):
         self.Refresh(False)
 
 #-----------------------------------------------------------------------------
-    def onTrackAct(self, event):
-        self.actionIdx = 0 if self.selectTrack != 'None' else -1
-        print("Active track %s" %self.selectTrack)
-
-#-----------------------------------------------------------------------------
-    def getAction(self):
-        if self.selectTrack == 'None' or self.actionIdx == -1:
-            return None
-        else:
-            cmdList = self.trackDict[self.selectTrack]
-            if self.actionIdx == len(cmdList):
-                self.trackLbs[self.actionIdx-1].SetBackgroundColour(wx.Colour(200, 200, 200))
-                self.Refresh(False)
-                self.actionIdx = -1
-                return 'land'
-            else:
-                cmd = cmdList[self.actionIdx]
-                self.trackLbs[self.actionIdx].SetBackgroundColour(wx.Colour('GREEN'))
-                if self.actionIdx > 0: self.trackLbs[self.actionIdx-1].SetBackgroundColour(wx.Colour(200, 200, 200))
-                self.Refresh(False)
-                self.actionIdx += 1
-                return cmd
-
-#-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class SensorCtrlPanel(wx.Panel):
-    """ Panel to do the sensor control."""
+    """ Sensor reading and firmware attestation display panel.."""
     def __init__(self, parent):
         """ Init the panel."""
         wx.Panel.__init__(self, parent, size=(500, 160))
@@ -244,13 +248,14 @@ class SensorCtrlPanel(wx.Panel):
 
 #-----------------------------------------------------------------------------
     def _buidUISizer(self):
+        """ Build the main UI sizer for the panel."""
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
         mSizer = wx.BoxSizer(wx.VERTICAL)
         # row idx 0 : basic patt setting.
         hbox0 = wx.BoxSizer(wx.HORIZONTAL)
         hbox0.Add(wx.StaticText(self, label="Sensor Control: ".ljust(15)), flag=flagsR, border=2)
         hbox0.AddSpacer(10)
-        hbox0.Add(wx.StaticText(self, label="Iteration Number: "),flag=flagsR, border=2)
+        hbox0.Add(wx.StaticText(self, label="Iteration Num: "),flag=flagsR, border=2)
         self.iterN = wx.TextCtrl(self, -1, "1", size=(40, -1), style=wx.TE_PROCESS_ENTER)
         hbox0.Add(self.iterN, flag=flagsR, border=2)
         hbox0.AddSpacer(10)
@@ -274,7 +279,7 @@ class SensorCtrlPanel(wx.Panel):
         self.chSmTCL = wx.TextCtrl(self, size=(480, 25))#, style=wx.TE_MULTILINE)
         mSizer.Add(self.chSmTCL,flag=flagsR, border=2)
         mSizer.AddSpacer(5)
-        self.attesBar = wx.Gauge(self, range=1000, size=(480, 17), style=wx.GA_HORIZONTAL)
+        self.attesBar = wx.Gauge(self, range=200, size=(480, 17), style=wx.GA_HORIZONTAL)
         mSizer.Add(self.attesBar,flag=flagsR, border=2)
         mSizer.Add(wx.StaticText(self, label="Sensor Final Firmware CheckSum: "),flag=flagsR, border=2)
         self.chSmTCS = wx.TextCtrl(self, size=(480, 25))
@@ -283,6 +288,7 @@ class SensorCtrlPanel(wx.Panel):
 
 #-----------------------------------------------------------------------------
     def onPattCheck(self, event):
+        """ Start firmware Patt attestation when user click the startPatt button."""
         iterN = int(self.iterN.GetValue())
         blockN = int(self.blockN.GetValue())
         self.chSmTCL.Clear()
@@ -294,19 +300,20 @@ class SensorCtrlPanel(wx.Panel):
 
 #-----------------------------------------------------------------------------
     def updateInfo(self, iterN=None, sead=None, alti=None):
-        if not iterN is None:
-            self.lbList[1].SetLabel(str(iterN))
-        if not sead is None:
-            self.lbList[3].SetLabel(str(sead))
-        if not alti is None:
-            self.lbList[5].SetLabel(str(alti))
+        """ Update information in Row Idx = 0 """
+        if not iterN is None: self.lbList[1].SetLabel(str(iterN))
+        if not sead is None: self.lbList[3].SetLabel(str(sead))
+        if not alti is None: self.lbList[5].SetLabel(str(alti))
 
+#-----------------------------------------------------------------------------
     def updateProgress(self, val, tot):
-        self.attesBar.SetValue(val*1000//tot)
+        """ update the Patt progress bar. """
+        self.attesBar.SetValue(val*200//tot)
 
 #-----------------------------------------------------------------------------
     def updateChecksum(self, local=None, remote=None):
-        if local:
+        """ Update the check sum display. """
+        if local: 
             self.chSmTCL.AppendText(local)
-        if remote:
-            self.chSmTCS.AppendText(remote)
+            self.attesBar.SetValue(20)  # update the progress bar.
+        if remote: self.chSmTCS.AppendText(remote)
