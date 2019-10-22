@@ -269,8 +269,8 @@ class SensorCtrlPanel(wx.Panel):
         mSizer.Add(hbox0, flag=flagsR, border=2)
         hbox0.AddSpacer(10)
         # row idx 1 : the patt attestation control display
-        gs = wx.GridSizer(1, 6, 5, 5)
-        fbLbList = ('Iteration:', ' - ','SeedVal:', ' - ', 'Altitude:', ' - ')
+        gs = wx.GridSizer(1, 8, 5, 5)
+        fbLbList = ('Iteration:', ' - ','SeedVal:', ' - ', 'Altitude:', ' - ', 'TimeUsed', ' - ')
         self.lbList = [wx.StaticText(self, label=val) for val in fbLbList]
         _ = [gs.Add(fblb, flag=flagsR, border=2) for fblb in self.lbList]
         mSizer.Add(gs, flag=flagsR, border=2)
@@ -299,11 +299,12 @@ class SensorCtrlPanel(wx.Panel):
             gv.iSensorChecker.setPattParameter(iterN, blockN)
 
 #-----------------------------------------------------------------------------
-    def updateInfo(self, iterN=None, sead=None, alti=None):
+    def updateInfo(self, iterN=None, sead=None, alti=None, timeU=None):
         """ Update information in Row Idx = 0 """
         if not iterN is None: self.lbList[1].SetLabel(str(iterN))
         if not sead is None: self.lbList[3].SetLabel(str(sead))
         if not alti is None: self.lbList[5].SetLabel(str(alti))
+        if not timeU is None: self.lbList[7].SetLabel(str(timeU))
 
 #-----------------------------------------------------------------------------
     def updateProgress(self, val, tot):

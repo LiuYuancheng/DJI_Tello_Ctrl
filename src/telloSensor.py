@@ -114,7 +114,7 @@ class telloSensor(threading.Thread):
 #-----------------------------------------------------------------------------
     def getSensorCheckSum(self, address_list):
         """ Connect to the sensor and get the check sum."""
-        sigma, listLen = '', len(address_list)
+        sigma, listLen, timeU = '', len(address_list), time.time()
         if self.conn:
             self.conn.sendall(str(listLen).encode('utf-8'))
             self.attitude = self.conn.recv(1024).decode('utf-8')
@@ -128,7 +128,7 @@ class telloSensor(threading.Thread):
                 # Update the display area.
                 if gv.iSensorPanel: 
                     gv.iSensorPanel.updateChecksum(remote=ch.upper())
-                    gv.iSensorPanel.updateInfo(alti=self.attitude)
+                    gv.iSensorPanel.updateInfo(alti=self.attitude, timeU = str(time.time()-timeU))
                     gv.iSensorPanel.updateProgress(64, listLen)
         return sigma
 
