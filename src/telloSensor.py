@@ -139,7 +139,7 @@ class telloSensor(threading.Thread):
         with open(gv.FIRM_FILE, "rb") as fh:
             bytesData = fh.read()
             for address in address_list:
-                sigma_star = sigma_star + bytesData[address].hex() + bytesData[address+1].hex()
+                sigma_star = sigma_star + bytesData[address:address+1].hex()
         return str(sigma_star).upper()
 
 #-----------------------------------------------------------------------------
