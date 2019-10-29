@@ -46,6 +46,7 @@ XA_PNG_LIST = ("".join([dirpath, "\\img\\flip_f.png"]),
 TRACK_PATH = "".join([dirpath, "\\TrackPath.txt"])
 # Firmware file path: 
 FIRM_FILE_NAME = "".join([dirpath, "\\firmware.hex"])
+FIRM_FILE = "".join([dirpath, "\\esp_client.ino.generic.bin"])
 # PATT check sum record.
 CHECKSUM_RCD = "".join([dirpath, "\\checkSumRecord.txt"])
 
