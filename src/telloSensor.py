@@ -137,9 +137,10 @@ class telloSensor(threading.Thread):
         """ Load the local firmware sample and calculate the PATT check sum."""
         sigma_star = ""
         with open(gv.FIRM_FILE, "rb") as fh:
+            bytesData = fh.read()
             for address in address_list:
-                sigma_star = sigma_star + fh.read(address).hex() + fh.read(address+1).hex()
-        return str(sigma_star).upper
+                sigma_star = sigma_star + bytesData[address].hex() + bytesData[address+1].hex()
+        return str(sigma_star).upper()
 
 #-----------------------------------------------------------------------------
     def _calculate_sigma_star_1(self, address_list):
