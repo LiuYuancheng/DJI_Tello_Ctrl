@@ -130,7 +130,13 @@ void loop()
     // hole to wait any cmd available from the server.
     while (client.available() == 0)
     {
-      delay(1);
+      if(client.connected())
+      {       
+        delay(1); 
+      }
+      else{
+        return; // handle the reconnect situation.
+      }
     }
     String line = client.readStringUntil('\r');
     line.trim();
