@@ -23,7 +23,7 @@ class PanelCam(wx.Panel):
         wx.Panel.__init__(self, parent,  size=(480, 360))
         self.SetBackgroundColour(wx.Colour(200, 200, 200))
         self.lastPeriodicTime = time.time()
-        self.heigh = self.battery = 0
+        self.heigh = 0
         self.bmp = wx.Bitmap(480, 360)
         self.Bind(wx.EVT_PAINT, self.onPaint)
         self.SetDoubleBuffered(True)
@@ -40,7 +40,7 @@ class PanelCam(wx.Panel):
         _ = [dc.DrawLine(220+5*i, 200+20*i, 260-5*i, 200+20*i) for i in range(4)]
         dc.SetTextForeground(wx.Colour('GREEN'))
         dc.DrawText('H: %s' % str(self.heigh), 250, 260)
-        dc.DrawText('Battery: %s' % str(self.battery), 20, 20)
+        #dc.DrawText('Battery: %s' % str(self.battery), 20, 20)
 
 #-----------------------------------------------------------------------------
     def scale_bitmap(self, bitmap, width, height):
@@ -54,9 +54,12 @@ class PanelCam(wx.Panel):
     def periodic(self, now):
         if now - self.lastPeriodicTime >= 0.05:
             """ Update the camera under 20 fps. """
-            (self.heigh, self.battery) = gv.iMainFrame.getHtAndBat()
             self.updateDisplay()
             self.lastPeriodicTime = now
+
+    def updateHeight(self, height):
+        """ Update the Drone height data """
+        self.heigh = height
 
 #-----------------------------------------------------------------------------
     def updateCvFrame(self, cvFrame):
@@ -80,10 +83,10 @@ class PanelCam(wx.Panel):
 #-----------------------------------------------------------------------------
 class PanelDetail(wx.Panel):
     """ Panel to show the detail information of the drone."""
-    def __init__(self, parent):
+    def __init__(self, parent, stateList):
         wx.Panel.__init__(self, parent,  size=(130, 500))
         self.SetBackgroundColour(wx.Colour(200, 200, 200))
-        self.dataStr = "pitch: -;roll: -;yaw: -;vgx: -;vgy -;vgz: -;templ: -;temph: -;tof: -;h: -;bat: -;baro: -; time: -;agx: -;agy: -;agz: -; -"
+        self.stateList = stateList
         self.labelList = []
         self.lastPeriodicTime = time.time()
         self.SetSizer(self._buidUISizer())
@@ -100,8 +103,8 @@ class PanelDetail(wx.Panel):
         mSizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(130, -1),
                                  style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
         mSizer.AddSpacer(10)
-        for val in self.dataStr.split(';'):
-            lb = wx.StaticText(self, label=' > ' + val)
+        for val in self.stateList:
+            lb = wx.StaticText(self, label=' > %s' % val)
             self.labelList.append(lb)
             mSizer.Add(lb, flag=flagsR, border=2)
             mSizer.AddSpacer(5)
@@ -115,14 +118,13 @@ class PanelDetail(wx.Panel):
             self.lastPeriodicTime = now
 
 #-----------------------------------------------------------------------------
-    def updateDataStr(self, dataStr):
-        self.dataStr = dataStr
+    def updateState(self, stateList):
+        self.stateList = stateList
 
 #-----------------------------------------------------------------------------
     def updateDisplay(self):
-        dataList = self.dataStr.split(';')
-        if len(dataList) != len(self.labelList): return # check whether data match.
-        for i, val in enumerate(dataList):
+        if len(self.stateList) != len(self.labelList): return # check whether data match.
+        for i, val in enumerate(self.stateList):
             self.labelList[i].SetLabel(' >  %s'  %val)
         self.Refresh(False)
 
@@ -210,7 +212,7 @@ class TrackCtrlPanel(wx.Panel):
         f = open(gv.TRACK_PATH, "r")
         fh = f.readlines()
         for line in fh:
-            parms = line.split(';')
+            parms = line.rstrip().split(';')
             key, val = parms[0], parms[1:]
             self.trackDict[key] = val
         print("Loaded tracks from file: %s" %str (self.trackDict.keys()))

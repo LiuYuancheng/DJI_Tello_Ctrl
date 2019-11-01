@@ -143,25 +143,6 @@ class telloSensor(threading.Thread):
         return str(sigma_star).upper()
 
 #-----------------------------------------------------------------------------
-    def _calculate_sigma_star_1(self, address_list):
-        """ Load the local firmware sample and calculate the PATT check sum."""
-        sigma_star = ""
-        f = open(gv.FIRM_FILE_NAME, "r")
-        line_list = f.readlines()
-        for address in address_list:
-            #print ("Address: %s" % address)
-            idx = address % gv.WORD_SIZE
-            line = line_list[address//gv.WORD_SIZE]
-            sigma_star = sigma_star + line[(idx*2)] + line[(idx*2) + 1]
-            #
-            
-        #print ("Stored sigma: %s" % sigma_star)
-        f.close()
-        return sigma_star
-
-
-
-#-----------------------------------------------------------------------------
     def _generate_sb_and_sw(self):
         """ Cenerate sb and sw LYC: (what are sb and sw stand for?)"""
         random.seed(datetime.now())
