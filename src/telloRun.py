@@ -185,17 +185,7 @@ class telloFrame(wx.Frame):
         """ Close the pop-up detail information window and clear paremeters."""
         if self.infoWindow:
             self.infoWindow.Destroy()
-            gv.iDetailPanel = None
-            self.infoWindow = None
-
-#-----------------------------------------------------------------------------
-    def getHtAndBat(self):
-        """ Return the current drone height and battery."""
-        h, b = 0, 0
-        if self.stateFbStr:
-            dataList = self.stateFbStr.split(';')
-            h, b = int(dataList[9].split(':')[1]), int(dataList[10].split(':')[1])
-        return (h, b)
+            self.infoWindow = gv.iDetailPanel = None
 
 #--<telloFrame>----------------------------------------------------------------
     def onButton(self, event):
@@ -212,7 +202,7 @@ class telloFrame(wx.Frame):
         print("OnKeyDown event %s" % keyCodeStr)
         if keyCodeStr in KEY_CODE.keys(): self.queueCmd(KEY_CODE[keyCodeStr])
 
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
     def onUAVConnect(self, event):
         """ Try to connect the drone and switch the control to SDK cmd mode."""
         # Connect to the drone and get the feed back from the cmd channel.
@@ -225,54 +215,56 @@ class telloFrame(wx.Frame):
         else:
             print('Tello: connect to the drone failed.')
 
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
     def updateBatterSt(self, pct):
-        """ Update the UI drone battery state."""
+        """ Update the UI drone battery state. pct: int battery percent"""
         self.batteryLbD.SetLabel(" Battery:[%s]".ljust(20) % str(pct).zfill(3))
         bgcolor = ('GRAY', 'RED', 'YELLOW', 'GREEN')
         self.batteryLbD.SetBackgroundColour(wx.Colour(bgcolor[min(pct//30, 3)]))
         self.batteryLbD.Refresh(True)
 
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
     def updateSenConn(self, state):
         """ Update the UI sensor connection state."""
-        if self.connFlagS == state: return # return if the state a same as UI shown
+        if self.connFlagS == state:
+            return  # return if the state a same as UI shown
         self.connFlagS = state
-        (lbText, bgColor) = (' SEN_Online', wx.Colour('Green')
-                             ) if self.connFlagS else ('SEN_Offline', wx.Colour(120, 120, 120))
-        self.connectLbS.SetLabel(lbText)
-        self.connectLbS.SetBackgroundColour(bgColor)
+        _ = self.connectLbS.SetLabel(
+            ' SEN_Online') if self.connFlagS else self.connectLbS.SetLabel('SEN_Offline')
+        _ = self.connectLbS.SetBackgroundColour(wx.Colour(
+            'Green')) if self.connFlagS else self.connectLbS.SetBackgroundColour(wx.Colour(120, 120, 120))
 
-#-----------------------------------------------------------------------------
-    def updateDataStr(self, dataStr):
-        """ Update the drone state data feedback string."""
-        self.stateFbStr = dataStr
-
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
     def updateSenDis(self, state):
         """ Update the sensor attestation check result."""
         (lbText, bgColor) = (' SEN_Att: Safe', wx.Colour('Green')) if state else (' SEN_Att: Unsafe', wx.Colour('RED'))
         self.senAttLb.SetLabel(lbText)
         self.senAttLb.SetBackgroundColour(bgColor)
 
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------www
     def periodic(self, event):
         """ Periodic call back to handle all the functions."""
         now = time.time()
-        # update the video panel.
+        # Update the video panel.
+        gv.iCamPanel.updateHeight(self.droneRsp.getHeight())
         gv.iCamPanel.periodic(now)
         # Update the active cmd ever 2 second.
         if self.connFlagD and now - self.lastPeriodicTime >= 5:
             cmd = gv.iTrackPanel.getAction()
-            if not cmd: cmd = 'command'
+            if not cmd: cmd = 'time?' # 'command' use file time cmd to keep drone alive
             self.queueCmd(cmd)
-            _, btPct = self.getHtAndBat()
-            self.updateBatterSt(btPct)
+            self.updateBatterSt(self.droneRsp.getBattery())
             self.lastPeriodicTime = now
-        # update the detail panel.
-        if gv.iDetailPanel:
+        # Update the drone detail state panel.
+        if gv.iDetailPanel: 
+            gv.iDetailPanel.updateState(self.droneRsp.getCrtState())
             gv.iDetailPanel.periodic(now)
         # pop the cmd queue and send the cmd.
+        self.popNextCmd()
+
+#--<telloFrame>----------------------------------------------------------------
+    def popNextCmd(self):
+        """ Pop the cmd queue and send the cmd, handling the response if needed."""
         if not self.cmdQueue.empty():
             msg = self.cmdQueue.get()
             print('cmd: %s' %msg)
@@ -283,26 +275,26 @@ class telloFrame(wx.Frame):
             elif msg == 'streamoff' or data == 'error':
                 self.videoRsp.initVideoConn(False)
 
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
     def queueCmd(self, cmd):
         """ Add the cmd in the cmd Queue."""
         if self.cmdQueue.full():
-            print("cmd Queue is full")
+            print("cmd queue is full.")
             return
         self.cmdQueue.put(cmd)
 
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
     def recvMsg(self):
         """ Receive the feed back message from the drone."""
         data, _ = self.sock.recvfrom(1518)
         return data.decode(encoding="utf-8")
 
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
     def sendMsg(self, msg):
         """ Send the control cmd to the drone directly."""
         self.sock.sendto(msg.encode(encoding="utf-8"), gv.CT_IP)
 
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
     def showDetail(self, event):
         """ Pop up the detail window to show all the drone state value."""
         if self.infoWindow is None and gv.iDetailPanel is None:
@@ -311,11 +303,11 @@ class telloFrame(wx.Frame):
                                            'UAV Detail', pos=(posF[0]+511, posF[1]),
                                            size=(130, 500),
                                            style=wx.DEFAULT_FRAME_STYLE)
-            gv.iDetailPanel = tp.PanelDetail(self.infoWindow)
+            gv.iDetailPanel = tp.PanelDetail(self.infoWindow, self.droneRsp.getCrtState())
             self.infoWindow.Bind(wx.EVT_CLOSE, self.infoWinClose)
             self.infoWindow.Show()
 
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
     def onClose(self, event):
         """ Stop all the thread and close the UI."""
         if gv.iSensorChecker: gv.iSensorChecker.stop()
@@ -332,20 +324,20 @@ class telloVideopSer(threading.Thread):
         self.terminate = False      
         self.capture = None     # Cv2 video capture handler.
 
-#-----------------------------------------------------------------------------
+#--<telloVideopSer>------------------------------------------------------------
     def run(self):
-        """ main loop to handle the data feed back."""
+        """ Main loop to handle the data feed back."""
         while not self.terminate:
             if self.capture and self.capture.isOpened():
                 ret, frame = self.capture.read()
                 if ret: gv.iCamPanel.updateCvFrame(frame)
             #time.sleep(0.01) # add a sleep time to avoid hang the main UI.
-            time.sleep(0.006)
+            time.sleep(0.006) # main video more smoth
         print('Tello video server terminated.')
 
-#-----------------------------------------------------------------------------
+#--<telloVideopSer>------------------------------------------------------------
     def initVideoConn(self, initFlag=True):
-        """ init the video connection. True-Init/reInit, False - Release"""
+        """ Init the video connection. True:Init/reInit, False:Release"""
         if initFlag:
             if self.capture: self.capture.release() # relased the existed connection.
             ip, port = gv.VD_IP
@@ -354,36 +346,56 @@ class telloVideopSer(threading.Thread):
         else:
             if self.capture: self.capture.release()
             self.capture = None
-#-----------------------------------------------------------------------------
-    def stop(self):
-        self.terminate = True
-        self.initVideoConn(False)
 
+#--<telloVideopSer>------------------------------------------------------------
+    def stop(self):
+        self.initVideoConn(False)
+        self.terminate = True
+        
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class telloRespSer(threading.Thread):
     """ Tello state prameters feedback UDP reading server thread.""" 
     def __init__(self, threadID, name, counter):
         threading.Thread.__init__(self)
+        # Init drone feed back data list.
+        self.stateList = ["pitch: 0", "roll: 0", "yaw: 0", "vgx: 0", "vgy 0",
+                          "vgz: 0", "templ: 0", "temph: 0", "tof: 0", "h: 0",
+                          "bat: 0", "baro: 0", "time: 0", "agx: 0", "agy: 0",
+                          "agz: 0", "-:-"]
         self.terminate = False
         self.udpSer = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udpSer.bind(gv.ST_IP)
 
-#-----------------------------------------------------------------------------
+#--telloRespSer----------------------------------------------------------------
     def run(self):
         """ main loop to handle the data feed back."""
         while not self.terminate:
             data, _ = self.udpSer.recvfrom(1518) # YC: Why the API use this buffer size ? 
             if not data: break
             if isinstance(data, bytes):
-                data = data.decode(encoding="utf-8")
-                if gv.iMainFrame: gv.iMainFrame.updateDataStr(data)
-                if gv.iDetailPanel: gv.iDetailPanel.updateDataStr(data)
+                dataStr = data.decode(encoding="utf-8")
+                self.stateList = dataStr.split(';')
         print('Tello state server terminated')
 
-#-----------------------------------------------------------------------------
+#--telloRespSer----------------------------------------------------------------
+    def getHeight(self):
+        """ Return the height value (unit: cm) as a int"""
+        return int(self.stateList[9].split(':')[1]) 
+
+#--telloRespSer----------------------------------------------------------------
+    def getBattery(self):
+        """ Return the battery value (unit: %) as a int"""
+        return int(self.stateList[10].split(':')[1])
+
+#--telloRespSer----------------------------------------------------------------
+    def getCrtState(self):
+        """ Return all the state data."""
+        return self.stateList
+
+#--telloRespSer----------------------------------------------------------------
     def stop(self):
-        """ Send back a Null message to terminate the buffer reading waiting part."""
+        """ Send back a None message to terminate the buffer reading waiting part."""
         self.terminate = True
         closeClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         closeClient.sendto(b'', ("127.0.0.1", gv.ST_IP[1]))
