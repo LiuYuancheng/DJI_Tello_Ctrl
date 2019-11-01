@@ -57,7 +57,7 @@ CHECKSUM_RCD = "\\".join([dirpath, "checkSumRecord.txt"])
 CT_IP = ('192.168.10.1', 8889)  # Drone control IP 
 VD_IP = ('0.0.0.0', 11111)      # UDP video stream server IP 
 FB_IP = ('', 9000)              # Own Feedback server IP
-ST_IP = ('', 8890)              # Drone Feed back server
+ST_IP = ('', 8890)              # Drone Feed back server IP
 SE_IP = ('0.0.0.0', 4000)       # Sensor server IP
 
 # parameters used by PATT firmware attestation.

@@ -2,9 +2,8 @@
 #-----------------------------------------------------------------------------
 # Name:        TelloRun.py
 #
-# Purpose:     This module is used to create a controller to control the DJI 
-#              Tello Drone and connect to the Arduino_ESP8266 to get the height
-#              sensor data.
+# Purpose:     This module is used to create a controller for the DJI Tello Drone
+#              and connect to the Arduino_ESP8266 to get the height sensor data.
 #
 # Author:      Yuancheng Liu
 #
@@ -28,22 +27,22 @@ import telloSensor as ts
 
 # The keyboad key to control the drone.
 KEY_CODE = {
-    '87'    : 'up',     # Key 'w'
-    '83'    : 'down',   # key 's'
-    '65'    : 'cw',     # key 'a'
-    '68'    : 'ccw',    # key 'd'
-    '315'   : 'forward', # key 'up'
-    '314'   : 'left',  # key 'left'
-    '316'   : 'right', # key 'right'
-    '317'   : 'back'   # key 'back'
+    '87'    : 'up 30',      # Key 'w'
+    '83'    : 'down 30',    # key 's'
+    '65'    : 'cw 30',      # key 'a'
+    '68'    : 'ccw 30',     # key 'd'
+    '315'   : 'forward 30', # key 'up'
+    '314'   : 'left 30',    # key 'left'
+    '316'   : 'right 30',   # key 'right'
+    '317'   : 'back 30'     # key 'back'
 }
 
-PERIODIC = 100  # main thread periodicly call by 10ms
+PERIODIC = 100  # main thread periodically callback by 10ms.
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class telloFrame(wx.Frame):
-    """ DJI tello drone controler program."""
+    """ DJI tello drone controller program."""
     def __init__(self, parent, id, title):
         """ Init the UI and parameters """
         wx.Frame.__init__(self, parent, id, title, size=(520, 810))
@@ -52,8 +51,8 @@ class telloFrame(wx.Frame):
         self.connFlagD = False      # drone connection flag.
         self.connFlagS = False      # sensor connection flag.
         self.infoWindow = None      # drone detail information window.
-        self.stateFbStr = None      # drone feed back data string
-        self.cmdQueue = queue.Queue(maxsize=10)
+        self.stateFbStr = None      # drone feed back data string.
+        self.cmdQueue = queue.Queue(maxsize=10) # drone control cmd q.
         # Init the cmd/rsp UDP server.
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(gv.FB_IP)
@@ -68,18 +67,29 @@ class telloFrame(wx.Frame):
         self.videoRsp.start()
         # Init the UI.
         self.SetSizer(self._buidUISizer())
-        # Set the periodic feedback:
+        # Set the periodic callback.
         self.lastPeriodicTime = time.time()
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.periodic)
         self.timer.Start(PERIODIC)  # every 100 ms
-        # Set the key sense event
+        # Set the key sense event.
         self.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
         # Add Close event here.
         self.Bind(wx.EVT_CLOSE, self.onClose)
         print("Program init finished.")
 
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
+    def _addSplitLine(self, pSizer, lStyle, length):
+        """ Add the split line to the input sizer. 
+            pSizer: parent sizer, lStyle: line style, length: pixel length.
+        """
+        pSizer.AddSpacer(5)
+        lSize = (length, -1) if lStyle == wx.LI_HORIZONTAL else (-1, length)
+        pSizer.Add(wx.StaticLine(self, wx.ID_ANY, size=lSize,
+                                 style=lStyle), flag=wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, border=2)
+        pSizer.AddSpacer(5)
+
+#--<telloFrame>----------------------------------------------------------------
     def _buidUISizer(self):
         """ Build the main UI sizer of the frame."""
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
@@ -95,38 +105,28 @@ class telloFrame(wx.Frame):
         mSizer.AddSpacer(5)
         # Row Idx = 2: Drone Control part
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.AddSpacer(20) # Added the title line.
-        hbox.Add(wx.StaticText(
-            self, label="Vertical Motion Ctrl".ljust(40)), flag=wx.ALL, border=2)
-        hbox.Add(wx.StaticText(
-            self, label="Takeoff and Cam Ctrl".ljust(40)), flag=wx.ALL, border=2)
-        hbox.Add(wx.StaticText(
-            self, label="Horizontal Motion Ctrl".ljust(40)), flag=wx.ALL, border=2)
+        hbox.AddSpacer(20)  # Added the title line.
+        lbList = ("Vertical Motion Ctrl",
+                  "Takeoff and Cam Ctrl",
+                  "Horizontal Motion Ctrl")
+        _ = [hbox.Add(wx.StaticText(self, label=str(val).ljust(40)),
+                      flag=wx.ALL, border=2) for val in lbList]
         mSizer.Add(hbox, flag=flagsR, border=2)
-        mSizer.AddSpacer(5)
-        mSizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(510, -1),
-                                 style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
-        mSizer.AddSpacer(5) # Added the control buttons.
+        self._addSplitLine(mSizer, wx.LI_HORIZONTAL, 510)
+        # Added the control buttons.
         mSizer.Add(self._buildCtrlSizer(), flag=flagsR, border=2)
         # Split line
-        mSizer.AddSpacer(5)
-        mSizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(510, -1),
-                                 style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
-        mSizer.AddSpacer(5)
+        self._addSplitLine(mSizer, wx.LI_HORIZONTAL, 510)
         # Row Idx = 3 : Track editing and control.
         gv.iTrackPanel = tp.TrackCtrlPanel(self)
         mSizer.Add(gv.iTrackPanel, flag=flagsC, border=2)
-        # Split line
-        mSizer.AddSpacer(5)
-        mSizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(510, -1),
-                                 style=wx.LI_HORIZONTAL), flag=flagsR, border=2)
-        mSizer.AddSpacer(5)
+        self._addSplitLine(mSizer, wx.LI_HORIZONTAL, 510)
         # Row Idx = 4 : Sensor PATT attestation control.
         gv.iSensorPanel = tp.SensorCtrlPanel(self)
         mSizer.Add(gv.iSensorPanel, flag=flagsC, border=2)
         return mSizer
 
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
     def _buildCtrlSizer(self):
         """ Build the Drone control sizer with all the control buttons."""
         mSizer, flagsR = wx.BoxSizer(wx.HORIZONTAL), wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
@@ -139,19 +139,17 @@ class telloFrame(wx.Frame):
             (gs, cmdList, pngList) = item
             mSizer.AddSpacer(10)
             for k, val in enumerate(cmdList):
-                bmp0 = wx.Bitmap(pngList[k], wx.BITMAP_TYPE_ANY)
-                outputBt = wx.BitmapButton(self, id=wx.ID_ANY, bitmap=bmp0, size=(
-                    bmp0.GetWidth()+6, bmp0.GetHeight()+6), name=val)
+                bmp = wx.Bitmap(pngList[k], wx.BITMAP_TYPE_ANY)
+                outputBt = wx.BitmapButton(self, id=wx.ID_ANY, bitmap=bmp, size=(
+                    bmp.GetWidth()+6, bmp.GetHeight()+6), name=val)
                 outputBt.Bind(wx.EVT_BUTTON, self.onButton)
                 gs.Add(outputBt, flag=flagsR, border=2)
             mSizer.Add(gs, flag=flagsR, border=2)
-            mSizer.AddSpacer(10)
-            if i < 2:
-                mSizer.Add(wx.StaticLine(self, wx.ID_ANY, size=(-1, 100),
-                                         style=wx.LI_VERTICAL), flag=flagsR, border=2)
+            mSizer.AddSpacer(5)
+            if i < 2: self._addSplitLine(mSizer, wx.LI_VERTICAL, 100)
         return mSizer
 
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
     def _buildStateSizer(self):
         """ Build the UAV + sensor state display sizer."""
         flagsR, dtColor = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, wx.Colour(120, 120, 120)
@@ -179,12 +177,12 @@ class telloFrame(wx.Frame):
         self.detailBt =  wx.Button(self, label=' >> ', size=(32, 20))
         self.detailBt.Bind(wx.EVT_BUTTON, self.showDetail)
         mSizer.Add(self.detailBt, flag=flagsR, border=2)
-        mSizer.AddSpacer(10)
+        mSizer.AddSpacer(5)
         return mSizer
 
-#--PanelBaseInfo---------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
     def infoWinClose(self, event):
-        """ Close the pop-up detail information window"""
+        """ Close the pop-up detail information window and clear paremeters."""
         if self.infoWindow:
             self.infoWindow.Destroy()
             gv.iDetailPanel = None
@@ -199,19 +197,20 @@ class telloFrame(wx.Frame):
             h, b = int(dataList[9].split(':')[1]), int(dataList[10].split(':')[1])
         return (h, b)
 
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
     def onButton(self, event):
-        """ Add  cmd to the cmd queue when the user press the UI button."""
+        """ Add a cmd to the cmd queue when user press a control button on UI."""
         cmd = event.GetEventObject().GetName()
-        print("Add message %s in the cmd Q." % cmd)
         if not cmd in gv.IN_CMD_LIST: cmd = cmd + " 30"
+        print("Add message [%s] in the cmd Q." % cmd)
         self.queueCmd(cmd)
 
-#-----------------------------------------------------------------------------
+#--<telloFrame>----------------------------------------------------------------
     def onKeyDown(self, event):
         """ Handle the control when the user press the keyboard."""
-        print("OnKeyDown event %s" % (event.GetKeyCode()))
-        self.queueCmd(KEY_CODE[str(event.GetKeyCode())])
+        keyCodeStr = str(event.GetKeyCode())
+        print("OnKeyDown event %s" % keyCodeStr)
+        if keyCodeStr in KEY_CODE.keys(): self.queueCmd(KEY_CODE[keyCodeStr])
 
 #-----------------------------------------------------------------------------
     def onUAVConnect(self, event):
