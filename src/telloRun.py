@@ -237,15 +237,19 @@ class telloFrame(wx.Frame):
         self.batteryLbD.Refresh(True)
 
 #--<telloFrame>----------------------------------------------------------------
-    def updateSenConn(self, state):
+    def updateSenConn(self, state, terminate):
         """ Update the UI sensor connection state."""
-        if self.connFlagS == state:
+        if self.connFlagS == state or terminate:
             return  # return if the state a same as UI shown
         self.connFlagS = state
-        _ = self.connectLbS.SetLabel(
-            ' SEN_Online') if self.connFlagS else self.connectLbS.SetLabel('SEN_Offline')
-        _ = self.connectLbS.SetBackgroundColour(wx.Colour(
-            'Green')) if self.connFlagS else self.connectLbS.SetBackgroundColour(wx.Colour(120, 120, 120))
+        if self.connFlagS:
+            self.connectLbS.SetLabel(' SEN_Online')
+            self.connectLbS.SetBackgroundColour(wx.Colour('Green'))
+            self.connectLbS.Refresh(False)
+        else:
+            self.connectLbS.SetLabel('SEN_Offline')
+            self.connectLbS.SetBackgroundColour(wx.Colour(120, 120, 120))
+            self.connectLbS.Refresh(False)
 
 #--<telloFrame>----------------------------------------------------------------
     def updateSenDis(self, state):
@@ -316,7 +320,6 @@ class telloFrame(wx.Frame):
         self.droneRsp.stop()
         self.videoRsp.stop()
         self.timer.Stop()
-        self.Close()
         self.Destroy()
 
 #-----------------------------------------------------------------------------

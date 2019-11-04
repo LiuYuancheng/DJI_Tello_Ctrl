@@ -47,9 +47,8 @@ class telloSensor(threading.Thread):
     def run(self):
         """ main loop to communicate with the clients.(overwirte thread.run())"""
         while not self.terminate:
-            print("xxxxxxxxxxxx")
             self.conn, addr = self.sock.accept()
-            if gv.iMainFrame: gv.iMainFrame.updateSenConn(True)
+            if gv.iMainFrame: gv.iMainFrame.updateSenConn(True, self.terminate) # YC: if not add termiate the program will hand when stop. why ? 
             print('Connection address:'+str(addr))
             while not self.terminate:
                 if self.iterTime > 0:
@@ -64,9 +63,8 @@ class telloSensor(threading.Thread):
                     if gv.iSensorPanel: 
                         print("Sensor feedback data: %s" %str(self.attitude))
                         gv.iSensorPanel.updateInfo(alti=self.attitude)
-            if gv.iMainFrame: gv.iMainFrame.updateSenConn(False)
+            if gv.iMainFrame: gv.iMainFrame.updateSenConn(False, self.terminate)
             print("Sensor disconnected.")
-        self.conn.close()
         self.sock.close()
         print("TCP server terminat.")
 
@@ -192,10 +190,9 @@ class telloSensor(threading.Thread):
         # Create a client to connect to the server to turnoff the server loop
         try:
             closeClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            closeClient.connect(('localhost', gv.SE_IP[1]))
-            closeClient.sendall(b'')
+            closeClient.connect(('127.0.0.1', gv.SE_IP[1]))
+            closeClient.send(b'')
             closeClient.close()
-            print("xxxx")
         except:
             print("The Sensor has disconnected already.")
         if self.conn: self.conn.close()
