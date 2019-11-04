@@ -52,10 +52,10 @@ class telloFrame(wx.Frame):
         self.connFlagS = False      # sensor connection flag.
         self.infoWindow = None      # drone detail information window.
         self.stateFbStr = None      # drone feed back data string.
+        self.lastCmd = None         # last cmd send to the drone which has not get resp.
         self.cmdQueue = queue.Queue(maxsize=10) # drone control cmd q.
-        # Init the cmd/rsp UDP server.
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind(gv.FB_IP)
+        self.droneCtrl = telloCtrlSer(0, "DJI_TELLO_CTRL", 1)
+        self.droneCtrl.start()
         # Init TCP server thread to connect to the sensor.
         gv.iSensorChecker = ts.telloSensor(1, "Arduino_ESP8266", 1)
         gv.iSensorChecker.start()
@@ -188,6 +188,19 @@ class telloFrame(wx.Frame):
             self.infoWindow = gv.iDetailPanel = None
 
 #--<telloFrame>----------------------------------------------------------------
+    def getNextRrsp(self):
+        """ Get the execution response of the last cmd and clear the last cmd for 
+            the next cmd queue pop.
+        """
+        resp = self.droneCtrl.getRecvMsg()
+        if resp:
+            if self.lastCmd == 'streamon' and resp == 'ok':
+                self.videoRsp.initVideoConn(True)
+            elif self.lastCmd == 'streamoff' or  resp == 'error':
+                self.videoRsp.initVideoConn(False)
+            self.lastCmd = None # clear the last response for cmd queue pop
+
+#--<telloFrame>----------------------------------------------------------------
     def onButton(self, event):
         """ Add a cmd to the cmd queue when user press a control button on UI."""
         cmd = event.GetEventObject().GetName()
@@ -206,14 +219,14 @@ class telloFrame(wx.Frame):
     def onUAVConnect(self, event):
         """ Try to connect the drone and switch the control to SDK cmd mode."""
         # Connect to the drone and get the feed back from the cmd channel.
-        self.sendMsg('command')
-        self.connFlagD = (self.recvMsg() == 'ok')
-        # Update the UI
-        if self.connFlagD:
+        self.droneCtrl.sendMsg('command')
+
+#--<telloFrame>----------------------------------------------------------------
+    def updateConnState(self):
+        if not self.connFlagD and self.droneCtrl.getRecvMsg():
+            self.connFlagD = True
             self.connectLbD.SetLabel(" UAV_Online".ljust(15))
             self.connectLbD.SetBackgroundColour(wx.Colour('GREEN'))
-        else:
-            print('Tello: connect to the drone failed.')
 
 #--<telloFrame>----------------------------------------------------------------
     def updateBatterSt(self, pct):
@@ -245,6 +258,7 @@ class telloFrame(wx.Frame):
     def periodic(self, event):
         """ Periodic call back to handle all the functions."""
         now = time.time()
+        self.updateConnState()
         # Update the video panel.
         gv.iCamPanel.updateHeight(self.droneRsp.getHeight())
         gv.iCamPanel.periodic(now)
@@ -261,19 +275,17 @@ class telloFrame(wx.Frame):
             gv.iDetailPanel.periodic(now)
         # pop the cmd queue and send the cmd.
         self.popNextCmd()
+        # get response from the drone.
+        self.getNextRrsp()
+
 
 #--<telloFrame>----------------------------------------------------------------
     def popNextCmd(self):
         """ Pop the cmd queue and send the cmd, handling the response if needed."""
-        if not self.cmdQueue.empty():
-            msg = self.cmdQueue.get()
-            print('cmd: %s' %msg)
-            self.sendMsg(msg)
-            data = self.recvMsg() if msg in ('streamon', 'streamoff') else ''
-            if msg == 'streamon' and data == 'ok':
-                self.videoRsp.initVideoConn(True)
-            elif msg == 'streamoff' or data == 'error':
-                self.videoRsp.initVideoConn(False)
+        if self.lastCmd is None and not self.cmdQueue.empty():
+            self.lastCmd = self.cmdQueue.get()
+            print('cmd: %s' %self.lastCmd)
+            self.droneCtrl.sendMsg(self.lastCmd)
 
 #--<telloFrame>----------------------------------------------------------------
     def queueCmd(self, cmd):
@@ -282,17 +294,6 @@ class telloFrame(wx.Frame):
             print("cmd queue is full.")
             return
         self.cmdQueue.put(cmd)
-
-#--<telloFrame>----------------------------------------------------------------
-    def recvMsg(self):
-        """ Receive the feed back message from the drone."""
-        data, _ = self.sock.recvfrom(1518)
-        return data.decode(encoding="utf-8")
-
-#--<telloFrame>----------------------------------------------------------------
-    def sendMsg(self, msg):
-        """ Send the control cmd to the drone directly."""
-        self.sock.sendto(msg.encode(encoding="utf-8"), gv.CT_IP)
 
 #--<telloFrame>----------------------------------------------------------------
     def showDetail(self, event):
@@ -311,9 +312,11 @@ class telloFrame(wx.Frame):
     def onClose(self, event):
         """ Stop all the thread and close the UI."""
         if gv.iSensorChecker: gv.iSensorChecker.stop()
+        self.droneCtrl.stop()
         self.droneRsp.stop()
         self.videoRsp.stop()
-        #self.Destroy()
+        self.timer.Stop()
+        self.Destroy()
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
@@ -354,7 +357,51 @@ class telloVideopSer(threading.Thread):
     def stop(self):
         self.initVideoConn(False)
         self.terminate = True
-        
+
+
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+class telloCtrlSer(threading.Thread):
+    """ Tello state prameters feedback UDP reading server thread.""" 
+    def __init__(self, threadID, name, counter):
+        threading.Thread.__init__(self)
+        self.terminate = False
+        # Init the cmd/rsp UDP server.
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind(gv.FB_IP)
+        self.recvMsg = None
+
+    #--telloRespSer----------------------------------------------------------------
+    def run(self):
+        """ main loop to handle the data feed back."""
+        while not self.terminate:
+            data, _ = self.sock.recvfrom(1518) # YC: Why the API use this buffer size ? 
+            if not data: break
+            if isinstance(data, bytes):
+                self.recvMsg = data.decode(encoding="utf-8")
+        self.sock.close()
+        print('Tello control server terminated')
+
+    #--<telloFrame>----------------------------------------------------------------
+    def sendMsg(self, msg):
+        """ Send the control cmd to the drone directly."""
+        self.sock.sendto(msg.encode(encoding="utf-8"), gv.CT_IP)
+
+    #--<telloFrame>----------------------------------------------------------------
+    def getRecvMsg(self):
+        """ send the last response back and clear the record."""
+        data = self.recvMsg
+        self.recvMsg = None
+        return data
+
+    #--telloRespSer----------------------------------------------------------------
+    def stop(self):
+        """ Send back a None message to terminate the buffer reading waiting part."""
+        self.terminate = True
+        closeClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        closeClient.sendto(b'', ("127.0.0.1", gv.FB_IP[1]))
+        closeClient.close()
+
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class telloRespSer(threading.Thread):
@@ -379,8 +426,9 @@ class telloRespSer(threading.Thread):
             if isinstance(data, bytes):
                 dataStr = data.decode(encoding="utf-8")
                 self.stateList = dataStr.split(';')
+        self.udpSer.close()
         print('Tello state server terminated')
-
+        
 #--telloRespSer----------------------------------------------------------------
     def getHeight(self):
         """ Return the height value (unit: cm) as a int"""
