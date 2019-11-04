@@ -1,2 +1,2 @@
-Track1;takeoff;command;up 30;left 30;right 30;up 30;up 30;land
+Track1;takeoff;command;up 30;left 30;up 30;up 30;land
 Track2;takeoff;up 30;cw 180;up 30;cw 180;cw 360;land

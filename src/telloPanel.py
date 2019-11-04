@@ -134,9 +134,7 @@ class PanelDetail(wx.Panel):
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class TrackCtrlPanel(wx.Panel):
-    """ Panel used to select the track and show the auto-tracking progress.
-        TODO: will added the track editing function.
-    """
+    """ Panel used to select the track and show the auto-tracking progress."""
     def __init__(self, parent):
         """ Init the panel."""
         wx.Panel.__init__(self, parent, size=(510, 70))
@@ -145,12 +143,11 @@ class TrackCtrlPanel(wx.Panel):
         self.trackLbs = []  # Track display label list.
         self.trackDict = {'None': ['-']*15} # track_name: action list dict.
         self.actionIdx = -1 # current executing action's idx in the track.
-        self.loadTrack()
+        self.loadTrack(None)
         self.SetSizer(self._buidUISizer())
-        self.onTrackSel(None) # load the track1.
         self.Refresh(False)
 
-#-----------------------------------------------------------------------------
+#--TrackCtrlPanel--------------------------------------------------------------
     def _buidUISizer(self):
         """ Build the main UI sizer for the panel."""
         mSizer = wx.BoxSizer(wx.VERTICAL)
@@ -168,28 +165,31 @@ class TrackCtrlPanel(wx.Panel):
         hbox.Add(self.trackCtrl, flag=flagsR, border=2)
         hbox.AddSpacer(5)
         self.trackAcBt = wx.Button(self, label='ActiveTrack', size=(90, 22))
+        self.trackAcBt.Bind(wx.EVT_BUTTON, self.onTrackAct)
         hbox.Add(self.trackAcBt, flag=flagsR, border=2)
         hbox.AddSpacer(5)
-        self.trackAcBt.Bind(wx.EVT_BUTTON, self.onTrackAct)
-        self.trackEdBt = wx.Button(self, label='EditTrack', size=(90, 22))
+        self.trackEdBt = wx.Button(self, label='ReLoadTrack', size=(90, 22))
+        self.trackEdBt.Bind(wx.EVT_BUTTON, self.loadTrack)
         hbox.Add(self.trackEdBt, flag=flagsR, border=2)
         hbox.AddSpacer(5)
-        self.trackAnBt = wx.Button(self, label='AddNewTrack', size=(90, 22))
-        hbox.Add(self.trackAnBt, flag=flagsR, border=2)
+        self.trackStopBt = wx.Button(self, label='EmergencyStop', size=(90, 22))
+        self.trackStopBt.SetBackgroundColour(wx.Colour('YELLOW'))
+        self.trackStopBt.Bind(wx.EVT_BUTTON, self.onEmerg)
+        hbox.Add(self.trackStopBt, flag=flagsR, border=2)
         mSizer.Add(hbox, flag=flagsR, border=2)
         mSizer.AddSpacer(5)
         # Row Idx 2: Track display area
         gs = wx.GridSizer(2, 8, 5, 5)
-        gs.Add(wx.StaticText(self, label="Track:".ljust(12)), flag=flagsC, border=2)
+        gs.Add(wx.StaticText(self, label="Track:".ljust(14)),flag=flagsC, border=2)
         for val in self.trackDict[self.selectTrack]:
-            tracklb = wx.StaticText(self, label=str(val).ljust(12))
+            tracklb = wx.StaticText(self, label=str(val).ljust(14))
             tracklb.SetBackgroundColour(wx.Colour(200, 200, 200))
             self.trackLbs.append(tracklb)
             gs.Add(tracklb, flag=flagsR, border=2)
         mSizer.Add(gs, flag=flagsR, border=2)
         return mSizer
 
-#-----------------------------------------------------------------------------
+#--TrackCtrlPanel--------------------------------------------------------------
     def getAction(self):
         """ Return the action drone need to do for the current track."""
         if self.selectTrack == 'None' or self.actionIdx == -1:
@@ -209,49 +209,54 @@ class TrackCtrlPanel(wx.Panel):
                 self.actionIdx += 1
                 return cmd
 
-#-----------------------------------------------------------------------------
-    def loadTrack(self):
+#--TrackCtrlPanel--------------------------------------------------------------
+    def loadTrack(self, event):
         """ Load the track from the track file."""
-        f = open(gv.TRACK_PATH, "r")
-        fh = f.readlines()
-        for line in fh:
-            parms = line.rstrip().split(';')
-            key, val = parms[0], parms[1:]
-            self.trackDict[key] = val
+        self.selectTrack = 'None' # clear the selected track.
+        with open(gv.TRACK_PATH, "r") as fh:
+            for line in fh.readlines():
+                parms = line.rstrip().split(';')
+                key, val = parms[0], parms[1:]
+                self.trackDict[key] = val
         print("Loaded tracks from file: %s" %str (self.trackDict.keys()))
-        f.close()
+        if not event is None: 
+            self.onTrackSel(None) # load the current selected track back.
 
-#-----------------------------------------------------------------------------
+#--TrackCtrlPanel--------------------------------------------------------------
+    def onEmerg(self, event):
+        """ Emergency stop stop all motors immediately."""
+        gv.iMainFrame.sendMsg('emergency')
+
+#--TrackCtrlPanel--------------------------------------------------------------
     def onTrackAct(self, event):
         """ Acticve the selected track.(set the track action to idx=0)"""
         self.actionIdx = 0 if self.selectTrack != 'None' else -1
         print("Active track: %s" %self.selectTrack)
 
-#-----------------------------------------------------------------------------
+#--TrackCtrlPanel--------------------------------------------------------------
     def onTrackSel(self, event):
         """ Handle the track selection. """
-        sel = self.trackCtrl.GetSelection()
-        self.selectTrack = self.trackCtrl.GetString(sel)
+        self.selectTrack = self.trackCtrl.GetString(self.trackCtrl.GetSelection())
         self.trackAcBt.Enable(self.selectTrack != 'None')
-        # clear all 
+        # Clear all display first.
         for i, val in enumerate(self.trackDict['None']):
-            self.trackLbs[i].SetLabel(str(val).ljust(12))
+            self.trackLbs[i].SetLabel(str(val).ljust(14))
         # set to selected track
         for i, val in enumerate(self.trackDict[self.selectTrack]):
-            self.trackLbs[i].SetLabel(str(val).ljust(12))
+            self.trackLbs[i].SetLabel(str(val).ljust(14))
         self.Refresh(False)
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class SensorCtrlPanel(wx.Panel):
-    """ Sensor reading and firmware attestation display panel.."""
+    """ Sensor reading and firmware attestation display panel."""
     def __init__(self, parent):
         """ Init the panel."""
         wx.Panel.__init__(self, parent, size=(500, 160))
         self.SetBackgroundColour(wx.Colour(200, 210, 200))
         self.SetSizer(self._buidUISizer())
 
-#-----------------------------------------------------------------------------
+#--SensorCtrlPanel-------------------------------------------------------------
     def _buidUISizer(self):
         """ Build the main UI sizer for the panel."""
         flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
@@ -291,11 +296,10 @@ class SensorCtrlPanel(wx.Panel):
         mSizer.Add(self.chSmTCS,flag=flagsR, border=2)
         return mSizer
 
-#-----------------------------------------------------------------------------
+#--SensorCtrlPanel-------------------------------------------------------------
     def onPattCheck(self, event):
         """ Start firmware Patt attestation when user click the startPatt button."""
-        iterN = int(self.iterN.GetValue())
-        blockN = int(self.blockN.GetValue())
+        iterN, blockN = int(self.iterN.GetValue()), int(self.blockN.GetValue())
         self.chSmTCL.Clear()
         self.chSmTCS.Clear()
         self.attesBar.SetValue(10)
@@ -303,7 +307,7 @@ class SensorCtrlPanel(wx.Panel):
         if gv.iSensorChecker:
             gv.iSensorChecker.setPattParameter(iterN, blockN)
 
-#-----------------------------------------------------------------------------
+#--SensorCtrlPanel-------------------------------------------------------------
     def updateInfo(self, iterN=None, sead=None, alti=None, timeU=None):
         """ Update information in Row Idx = 0 """
         if not iterN is None: self.lbList[1].SetLabel(str(iterN))
@@ -312,12 +316,12 @@ class SensorCtrlPanel(wx.Panel):
         if not timeU is None: self.lbList[7].SetLabel(str(timeU))
         self.Refresh(False)
 
-#-----------------------------------------------------------------------------
+#--SensorCtrlPanel-------------------------------------------------------------
     def updateProgress(self, val, tot):
         """ update the Patt progress bar. """
         self.attesBar.SetValue(val*200//tot)
 
-#-----------------------------------------------------------------------------
+#--SensorCtrlPanel-------------------------------------------------------------
     def updateChecksum(self, local=None, remote=None):
         """ Update the check sum display. """
         if local: 
