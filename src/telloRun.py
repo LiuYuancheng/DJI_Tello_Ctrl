@@ -251,7 +251,7 @@ class telloFrame(wx.Frame):
         # Update the active cmd ever 2 second.
         if self.connFlagD and now - self.lastPeriodicTime >= 5:
             cmd = gv.iTrackPanel.getAction()
-            if not cmd: cmd = 'time?' # 'command' use file time cmd to keep drone alive
+            if not cmd: cmd = 'command' # 'command' use file time cmd to keep drone alive
             self.queueCmd(cmd)
             self.updateBatterSt(self.droneRsp.getBattery())
             self.lastPeriodicTime = now
@@ -313,7 +313,7 @@ class telloFrame(wx.Frame):
         if gv.iSensorChecker: gv.iSensorChecker.stop()
         self.droneRsp.stop()
         self.videoRsp.stop()
-        self.Destroy()
+        #self.Destroy()
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
@@ -329,9 +329,12 @@ class telloVideopSer(threading.Thread):
         """ Main loop to handle the data feed back."""
         while not self.terminate:
             if self.capture and self.capture.isOpened():
-                ret, frame = self.capture.read()
-                if ret: gv.iCamPanel.updateCvFrame(frame)
-            #time.sleep(0.01) # add a sleep time to avoid hang the main UI.
+                try:
+                    ret, frame = self.capture.read()
+                    if ret: gv.iCamPanel.updateCvFrame(frame)
+                #time.sleep(0.01) # add a sleep time to avoid hang the main UI.
+                except:
+                    time.sleep(0.01)
             time.sleep(0.006) # main video more smoth
         print('Tello video server terminated.')
 
@@ -344,7 +347,7 @@ class telloVideopSer(threading.Thread):
             addr = 'udp://%s:%s' % (str(ip), str(port))
             self.capture = cv2.VideoCapture(addr)
         else:
-            if self.capture: self.capture.release()
+            #if self.capture: self.capture.release()
             self.capture = None
 
 #--<telloVideopSer>------------------------------------------------------------
