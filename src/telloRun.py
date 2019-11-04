@@ -316,6 +316,7 @@ class telloFrame(wx.Frame):
         self.droneRsp.stop()
         self.videoRsp.stop()
         self.timer.Stop()
+        self.Close()
         self.Destroy()
 
 #-----------------------------------------------------------------------------

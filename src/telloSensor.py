@@ -47,6 +47,7 @@ class telloSensor(threading.Thread):
     def run(self):
         """ main loop to communicate with the clients.(overwirte thread.run())"""
         while not self.terminate:
+            print("xxxxxxxxxxxx")
             self.conn, addr = self.sock.accept()
             if gv.iMainFrame: gv.iMainFrame.updateSenConn(True)
             print('Connection address:'+str(addr))
@@ -65,6 +66,8 @@ class telloSensor(threading.Thread):
                         gv.iSensorPanel.updateInfo(alti=self.attitude)
             if gv.iMainFrame: gv.iMainFrame.updateSenConn(False)
             print("Sensor disconnected.")
+        self.conn.close()
+        self.sock.close()
         print("TCP server terminat.")
 
 #-----------------------------------------------------------------------------
@@ -185,9 +188,15 @@ class telloSensor(threading.Thread):
     def stop(self):
         """ Stop the thread."""
         self.terminate = True
-        if self.conn: self.conn.close()
+        #if self.conn: self.conn.close()
         # Create a client to connect to the server to turnoff the server loop
-        closeClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        closeClient.connect(('127.0.0.1', gv.SE_IP[1]))
-        closeClient.close()
+        try:
+            closeClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            closeClient.connect(('localhost', gv.SE_IP[1]))
+            closeClient.sendall(b'')
+            closeClient.close()
+            print("xxxx")
+        except:
+            print("The Sensor has disconnected already.")
+        if self.conn: self.conn.close()
 
