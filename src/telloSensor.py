@@ -74,7 +74,11 @@ class telloSensor(threading.Thread):
         if self.conn:
             print('telloSensor  : send distance request.')
             self.conn.sendall(b'-1')
-            return self.conn.recv(1024).decode('utf-8')
+            try:
+                return self.conn.recv(1024).decode('utf-8')
+            except:
+                print('telloSensor  : connection abort')
+                return None
 
 #-----------------------------------------------------------------------------
     def getCheckSum(self, number_of_blocks):
