@@ -31,13 +31,13 @@ class telloSensor(threading.Thread):
         self.checkSumfh = None          # filehandler to record the checksum.
         self.iterTime = -1              # Patt iteration time.
         self.blockNum = 1               # memory block size.
-        self.stated = 'unsafe'
+        self.stated = 'unsafe'          # Patt attestation result.
         # Init TCP communication channel:
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.bind(gv.SE_IP)
             self.sock.listen(clientMax)
-            self.conn = None
+            self.conn = None # connection handler.
         except:
             print("telloSensor  : TCP socket server init error.")
             exit()

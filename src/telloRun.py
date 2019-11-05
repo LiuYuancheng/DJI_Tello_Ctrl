@@ -209,6 +209,16 @@ class telloFrame(wx.Frame):
         self.queueCmd(cmd)
 
 #--<telloFrame>----------------------------------------------------------------
+    def onClose(self, event):
+        """ Stop all the thread and close the UI."""
+        if gv.iSensorChecker: gv.iSensorChecker.stop()
+        self.droneCtrl.stop()
+        self.droneRsp.stop()
+        self.videoRsp.stop()
+        self.timer.Stop()
+        self.Destroy()
+
+#--<telloFrame>----------------------------------------------------------------
     def onKeyDown(self, event):
         """ Handle the control when the user press the keyboard."""
         keyCodeStr = str(event.GetKeyCode())
@@ -220,6 +230,59 @@ class telloFrame(wx.Frame):
         """ Try to connect the drone and switch the control to SDK cmd mode."""
         # Connect to the drone and get the feed back from the cmd channel.
         self.droneCtrl.sendMsg('command')
+
+#--<telloFrame>----------------------------------------------------------------www
+    def periodic(self, event):
+        """ Periodic call back to handle all the functions."""
+        now = time.time()
+        self.updateConnState()
+        # Update the video panel.
+        gv.iCamPanel.updateHeight(self.droneRsp.getHeight())
+        gv.iCamPanel.periodic(now)
+        # Update the active cmd ever 2 second.
+        if self.connFlagD and now - self.lastPeriodicTime >= 5:
+            cmd = gv.iTrackPanel.getAction()
+            if not cmd: cmd = 'command' # 'command' use file time cmd to keep drone alive
+            self.queueCmd(cmd)
+            self.updateBatterSt(self.droneRsp.getBattery())
+            self.lastPeriodicTime = now
+        # Update the drone detail state panel.
+        if gv.iDetailPanel: 
+            gv.iDetailPanel.updateState(self.droneRsp.getCrtState())
+            gv.iDetailPanel.periodic(now)
+        # pop the cmd queue and send the cmd.
+        self.popNextCmd()
+        # get response from the drone.
+        self.getNextRrsp()
+
+#--<telloFrame>----------------------------------------------------------------
+    def popNextCmd(self):
+        """ Pop the cmd queue and send the cmd, handling the response if needed."""
+        if self.lastCmd is None and not self.cmdQueue.empty():
+            self.lastCmd = self.cmdQueue.get()
+            print('cmd: %s' %self.lastCmd)
+            self.droneCtrl.sendMsg(self.lastCmd)
+
+#--<telloFrame>----------------------------------------------------------------
+    def queueCmd(self, cmd):
+        """ Add the cmd in the cmd Queue."""
+        if self.cmdQueue.full():
+            print("cmd queue is full.")
+            return
+        self.cmdQueue.put(cmd)
+
+#--<telloFrame>----------------------------------------------------------------
+    def showDetail(self, event):
+        """ Pop up the detail window to show all the drone state value."""
+        if self.infoWindow is None and gv.iDetailPanel is None:
+            posF = gv.iMainFrame.GetPosition()
+            self.infoWindow = wx.MiniFrame(gv.iMainFrame, -1,
+                                           'UAV Detail', pos=(posF[0]+511, posF[1]),
+                                           size=(130, 500),
+                                           style=wx.DEFAULT_FRAME_STYLE)
+            gv.iDetailPanel = tp.PanelDetail(self.infoWindow, self.droneRsp.getCrtState())
+            self.infoWindow.Bind(wx.EVT_CLOSE, self.infoWinClose)
+            self.infoWindow.Show()
 
 #--<telloFrame>----------------------------------------------------------------
     def updateConnState(self):
@@ -257,70 +320,6 @@ class telloFrame(wx.Frame):
         (lbText, bgColor) = (' SEN_Att: Safe', wx.Colour('Green')) if state else (' SEN_Att: Unsafe', wx.Colour('RED'))
         self.senAttLb.SetLabel(lbText)
         self.senAttLb.SetBackgroundColour(bgColor)
-
-#--<telloFrame>----------------------------------------------------------------www
-    def periodic(self, event):
-        """ Periodic call back to handle all the functions."""
-        now = time.time()
-        self.updateConnState()
-        # Update the video panel.
-        gv.iCamPanel.updateHeight(self.droneRsp.getHeight())
-        gv.iCamPanel.periodic(now)
-        # Update the active cmd ever 2 second.
-        if self.connFlagD and now - self.lastPeriodicTime >= 5:
-            cmd = gv.iTrackPanel.getAction()
-            if not cmd: cmd = 'command' # 'command' use file time cmd to keep drone alive
-            self.queueCmd(cmd)
-            self.updateBatterSt(self.droneRsp.getBattery())
-            self.lastPeriodicTime = now
-        # Update the drone detail state panel.
-        if gv.iDetailPanel: 
-            gv.iDetailPanel.updateState(self.droneRsp.getCrtState())
-            gv.iDetailPanel.periodic(now)
-        # pop the cmd queue and send the cmd.
-        self.popNextCmd()
-        # get response from the drone.
-        self.getNextRrsp()
-
-
-#--<telloFrame>----------------------------------------------------------------
-    def popNextCmd(self):
-        """ Pop the cmd queue and send the cmd, handling the response if needed."""
-        if self.lastCmd is None and not self.cmdQueue.empty():
-            self.lastCmd = self.cmdQueue.get()
-            print('cmd: %s' %self.lastCmd)
-            self.droneCtrl.sendMsg(self.lastCmd)
-
-#--<telloFrame>----------------------------------------------------------------
-    def queueCmd(self, cmd):
-        """ Add the cmd in the cmd Queue."""
-        if self.cmdQueue.full():
-            print("cmd queue is full.")
-            return
-        self.cmdQueue.put(cmd)
-
-#--<telloFrame>----------------------------------------------------------------
-    def showDetail(self, event):
-        """ Pop up the detail window to show all the drone state value."""
-        if self.infoWindow is None and gv.iDetailPanel is None:
-            posF = gv.iMainFrame.GetPosition()
-            self.infoWindow = wx.MiniFrame(gv.iMainFrame, -1,
-                                           'UAV Detail', pos=(posF[0]+511, posF[1]),
-                                           size=(130, 500),
-                                           style=wx.DEFAULT_FRAME_STYLE)
-            gv.iDetailPanel = tp.PanelDetail(self.infoWindow, self.droneRsp.getCrtState())
-            self.infoWindow.Bind(wx.EVT_CLOSE, self.infoWinClose)
-            self.infoWindow.Show()
-
-#--<telloFrame>----------------------------------------------------------------
-    def onClose(self, event):
-        """ Stop all the thread and close the UI."""
-        if gv.iSensorChecker: gv.iSensorChecker.stop()
-        self.droneCtrl.stop()
-        self.droneRsp.stop()
-        self.videoRsp.stop()
-        self.timer.Stop()
-        self.Destroy()
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
@@ -361,7 +360,6 @@ class telloVideopSer(threading.Thread):
     def stop(self):
         self.initVideoConn(False)
         self.terminate = True
-
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
