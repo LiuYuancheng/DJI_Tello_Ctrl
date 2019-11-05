@@ -19,36 +19,36 @@ APP_NAME = 'DJI Tello Ctrl'
 
 #------<IMAGES PATH>-------------------------------------------------------------
 IMG_FD = 'img'
-ICO_PATH = "\\".join((dirpath, IMG_FD, "telloIcon.ico"))
+ICO_PATH = os.path.join(dirpath, IMG_FD, "telloIcon.ico")
 # Vertial movement control:
 YA_CMD_LIST = ('flip l', 'up', 'flip r', 'cw', 'down', 'ccw')
-YA_PNG_LIST = ("\\".join((dirpath, IMG_FD, "flip_l.png")),
-               "\\".join((dirpath, IMG_FD, "up.png")),
-               "\\".join((dirpath, IMG_FD, "flip_r.png")),
-               "\\".join((dirpath, IMG_FD, "cw.png")),
-               "\\".join((dirpath, IMG_FD, "down.png")),
-               "\\".join((dirpath, IMG_FD, "ccw.png")))
+YA_PNG_LIST = (os.path.join(dirpath, IMG_FD, "flip_l.png"),
+               os.path.join(dirpath, IMG_FD, "up.png"),
+               os.path.join(dirpath, IMG_FD, "flip_r.png"),
+               os.path.join(dirpath, IMG_FD, "cw.png"),
+               os.path.join(dirpath, IMG_FD, "down.png"),
+               os.path.join(dirpath, IMG_FD, "ccw.png"))
 # Function movement control:
 IN_CMD_LIST = ('takeoff', 'land', 'streamon', 'streamoff')
-IN_PNG_LIST = ("\\".join((dirpath, IMG_FD, "takeoff.png")),
-               "\\".join((dirpath, IMG_FD, "land.png")),
-               "\\".join((dirpath, IMG_FD, "streamon.png")),
-               "\\".join((dirpath, IMG_FD, "streamoff.png")))
+IN_PNG_LIST = (os.path.join(dirpath, IMG_FD, "takeoff.png"),
+               os.path.join(dirpath, IMG_FD, "land.png"),
+               os.path.join(dirpath, IMG_FD, "streamon.png"),
+               os.path.join(dirpath, IMG_FD, "streamoff.png"))
 # Horizontal movement control:
 XA_CMD_LIST = ('flip f', 'forward', 'flip b', 'left', 'back', 'right')
-XA_PNG_LIST = ("\\".join((dirpath, IMG_FD, "flip_f.png")),
-               "\\".join((dirpath, IMG_FD, "forward.png")),
-               "\\".join((dirpath, IMG_FD, "flip_b.png")),
-               "\\".join((dirpath, IMG_FD, "left.png")),
-               "\\".join((dirpath, IMG_FD, "back.png")),
-               "\\".join((dirpath, IMG_FD, "right.png")))
+XA_PNG_LIST = (os.path.join(dirpath, IMG_FD, "flip_f.png"),
+               os.path.join(dirpath, IMG_FD, "forward.png"),
+               os.path.join(dirpath, IMG_FD, "flip_b.png"),
+               os.path.join(dirpath, IMG_FD, "left.png"),
+               os.path.join(dirpath, IMG_FD, "back.png"),
+               os.path.join(dirpath, IMG_FD, "right.png"))
 
 # Track path record file:
-TRACK_PATH = "\\".join([dirpath, "TrackPath.txt"])
+TRACK_PATH = os.path.join(dirpath, "TrackPath.txt")
 # Firmware file path: 
-FIRM_FILE = "\\".join([dirpath, "esp_client","esp_client.ino.generic.bin"])
+FIRM_FILE = os.path.join(dirpath, "esp_client", "esp_client.ino.generic.bin")
 # PATT check sum record.
-CHECKSUM_RCD = "\\".join([dirpath, "checkSumRecord.txt"])
+CHECKSUM_RCD = os.path.join(dirpath, "checkSumRecord.txt")
 
 # Communication IP Port setting:
 # Send Command & Receive Response: Tello IP: 192.168.10.1  UDP PORT:8889  <<-->>  PC/Mac/Mobile
