@@ -31,7 +31,7 @@ class telloSensor(threading.Thread):
         self.checkSumfh = None          # filehandler to record the checksum.
         self.iterTime = -1              # Patt iteration time.
         self.blockNum = 1               # memory block size.
-        self.stated = 'unsafe'          # Patt attestation result.
+        self.stated = 'safe'          # Patt attestation result.
         # Init TCP communication channel:
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -63,6 +63,9 @@ class telloSensor(threading.Thread):
                     if gv.iSensorPanel: 
                         print("Sensor feedback data: %s" %str(self.attitude))
                         gv.iSensorPanel.updateInfo(alti=self.attitude)
+                        if self.stated == 'unsafe':
+                            gv.iSensorPanel.updateInfo(alti='1000')
+
             if gv.iMainFrame: gv.iMainFrame.updateSenConn(False, self.terminate)
             print("Sensor disconnected.")
         self.sock.close()

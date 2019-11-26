@@ -56,6 +56,7 @@ class telloFrame(wx.Frame):
         self.cmdQueue = queue.Queue(maxsize=10) # drone control cmd q.
         self.droneCtrl = telloCtrlSer(0, "DJI_TELLO_CTRL", 1)
         self.droneCtrl.start()
+        self.sensorState = True
         # Init TCP server thread to connect to the sensor.
         gv.iSensorChecker = ts.telloSensor(1, "Arduino_ESP8266", 1)
         gv.iSensorChecker.start()
@@ -262,6 +263,8 @@ class telloFrame(wx.Frame):
             self.lastCmd = self.cmdQueue.get()
             print('cmd: %s' %self.lastCmd)
             self.droneCtrl.sendMsg(self.lastCmd)
+            if not self.sensorState:
+                self.droneCtrl.sendMsg('up 50')
 
 #--<telloFrame>----------------------------------------------------------------
     def queueCmd(self, cmd):
@@ -318,8 +321,10 @@ class telloFrame(wx.Frame):
     def updateSenDis(self, state):
         """ Update the sensor attestation check result."""
         (lbText, bgColor) = (' SEN_Att: Safe', wx.Colour('Green')) if state else (' SEN_Att: Unsafe', wx.Colour('RED'))
+        self.sensorState = state
         self.senAttLb.SetLabel(lbText)
         self.senAttLb.SetBackgroundColour(bgColor)
+        
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
