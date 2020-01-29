@@ -1,9 +1,5 @@
 # DJI_Tello_Ctrl
 
-[TOC]
-
-------
-
 #### 1. Introduction
 
 This project contains two sections: 
@@ -132,7 +128,7 @@ After the program initialization finished, the below message will show in your t
    
   > TrackName**;**action 1**;**action x**;**action x**;**action x**;**action x**;**action x**;**land (example:*Track1;takeoff;command;up 30;ccw 30;up 30;ccw 30;up 30;land* .
    
-     If you don't set the land cmd, the program will add the land cmd automatically. For the action setting part, please check the detail drone control protocol in Tello SDK Documentation EN_1.3_1122.pdf under doc folder ) 
+     >  If you don't set the land cmd, the program will add the land cmd automatically. For the action setting part, please check the detail drone control protocol in Tello SDK Documentation EN_1.3_1122.pdf under doc folder ) 
    
    - Select the track in the drop down menu and click the "Active track" button, the selected track will by executed by the drone. The current executed action will be marked as green color. 
    
@@ -157,4 +153,3 @@ After the program initialization finished, the below message will show in your t
 ------
 
 > Last edit by LiuYuancheng(liu_yuan_cheng@hotmail.com) at 29/01/2020
-
