@@ -1,22 +1,34 @@
 # DJI_Tello_Ctrl
 
-#### Introduction
-
-This project will create a DJI Tello Drone controller program with the drone basic motion control and track edit function. It will also use the ESP8266 Arduino to read the data from HC-SR04 Ultrasonic Sensor to do the fly environment monitoring function and provide the sensor firmware attestation function by using the "PATT" algorithm.  
-
-###### Program Main UI View: 
-
-![](https://github.com/LiuYuancheng/DJI_Tello_Ctrl/blob/master/doc/2019-10-18_123002.jpg)
-
-###### Hardware View (Done with sensors):
-
-![](https://github.com/LiuYuancheng/DJI_Tello_Ctrl/blob/master/doc/sernsors.JPG)
+[TOC]
 
 ------
 
-###### Development Env: Python 3.7.4
+#### 1. Introduction
 
-###### Additional Lib Need: 
+This project contains two sections: 
+
+**DJI Tello Drone control** : In this section we will create a DJI Tello Drone controller program with the drone basic motion control, track edit function and drone motion safety check function. 
+
+**Arduino firmware attestation**: In this section we will create a firmware program running on the ESP8266 Arduino to read the distances data from HC-SR04 Ultrasonic Sensor to do the fly environment monitoring and provide the sensor firmware attestation function by using the "PATT" algorithm to confirm the firmware is not changed by attacker.  
+
+###### Program Main UI View
+
+![](doc/2019-10-18_123002.jpg)
+
+###### Hardware View (Done with sensors installed)
+
+![](doc/sernsors.JPG)
+
+------
+
+#### 2. Program Setup
+
+###### Development Environment
+
+> Python 3.7.4, C
+
+###### Additional Lib Need
 
 1. wxPython 4.0.6 (need to install for UI building) 
 
@@ -34,11 +46,11 @@ pip install -U wxPython
 pip install opencv-python
 ```
 
-###### Hardware Need:
+###### Hardware Need
 
 We use DJI Tello Drone, ESP8266 Arduino and HC-SR04 Ultrasonic Sensor to build the system: 
 
-![](https://github.com/LiuYuancheng/DJI_Tello_Ctrl/blob/master/doc/item.jpg)
+![](doc/item.jpg)
 
 [DJI Tello ]: https://www.ryzerobotics.com/tello/downloads	"DJI tello control SDK"
 [ESP8266 Arduino ]: https://arduino-esp8266.readthedocs.io/en/latest/	"ESP8266 Arduino dev doc"
@@ -46,7 +58,7 @@ We use DJI Tello Drone, ESP8266 Arduino and HC-SR04 Ultrasonic Sensor to build t
 
 ------
 
-#### System Design
+#### 3. System Design
 
 ###### Communication Protocol 
 
@@ -57,31 +69,45 @@ We use DJI Tello Drone, ESP8266 Arduino and HC-SR04 Ultrasonic Sensor to build t
 | Drone Control (Receive Tello State): Tello_IP: 192.168.10.1  UDP_PORT:8890 ->>  PC/Mac/Mobile_ UDP_Server: 0.0.0.0, UDP PORT:8890 |
 | Drone Control (Receive Tello Video Stream) :  Tello_IP: 192.168.10.1, UDP_PORT:11111->>  PC/Mac/Mobile_UDP_Server: 0.0.0.0,  UDP_PORT:11111 |
 
-![](https://github.com/LiuYuancheng/DJI_Tello_Ctrl/blob/master/doc/port.png)
+![](doc/port.png)
 
-###### WIFI Connection Diagram: 
+###### WIFI Connection Diagram
 
 The Tello drone will connect the computer by WIFI. The Arduino will connect to a router first then connect to the computer. The connection diagram is shown below: 
 
-![](https://github.com/LiuYuancheng/DJI_Tello_Ctrl/blob/master/doc/communicate.png)
+![](doc/communicate.png)
 
-###### Program Executions Diagram: 
+###### Program Executions Diagram
 
-The main thread will start 3 sub-Thread to communicate with the Arduino, read the tello states data and get the tello Video stream. The main thread will handle the tello control. Program execution UML diagram: 
+The main thread will start 3 sub-Thread to communicate with the Arduino, read the Tello states data and get the Tello's UDP Video stream. The main thread will handle the Tello control. Program execution UML diagram: 
 
-![](https://github.com/LiuYuancheng/DJI_Tello_Ctrl/blob/master/doc/workflow.png)
+![](doc/workflow.png)
+
+###### Program File List 
+
+| Program File          | Execution Env | Description                                                  |
+| --------------------- | ------------- | ------------------------------------------------------------ |
+| esp_client.ino        | C (Arduino)   | This module will start a TCP client to send the HC-SR04 Ultrasonic Sensor reading to server and send the firmware checksum for attestation. |
+| esp_client_attack.ino | C (Arduino)   | Attack firmware: It has the same function as the file <esp_client.ino>, but if we compile this program and load the firmware in to the Arduino, the sensor feed back will be set to a fixed number. |
+| telloGlobal.py        | python3.7     | This module is used as a Local config file to set constants and global parameters which will be used in the other modules. |
+| TelloPanel.py         | python 3.7    | This module is used to create the control and display panel for the UAV system (drone control and sensor firmware attestation). |
+| TelloRun.py           | python 3.7    | This module is used to create a controller for the DJI Tello Drone and connect to the Arduino_ESP8266 to get the height sensor data. |
+| telloSensor.py        | python 3.7    | This module is used to create a TCPcommunication server to receive the Arduino_ESP8266 height data and do the PATT attestation. |
+| TrackPath.txt         |               | Edit the drone fly path.                                     |
 
 ------
 
-#### Program Usage: 
+#### 4. Program Usage
 
-Follow the section "WIFI Connection Diagram" to connect to the sensor and drone to your computer. Then execute the program telloRun.py under src folder by the below command: 
+###### Run the Program
+
+Follow the section "WIFI Connection Diagram" to connect to the sensor and drone to your computer. Then execute the program telloRun.py under <src> folder by the below command: 
 
 ```
 python telloRun.py
 ```
 
-After the init finish show in your terminal: 
+After the program initialization finished, the below message will show in your terminal: 
 
 ```
 "Program init finished."
@@ -89,11 +115,11 @@ After the init finish show in your terminal:
 
  Then the main UI will show as below: 
 
-![](https://github.com/LiuYuancheng/DJI_Tello_Ctrl/blob/master/doc/mainUI.png)
+![](doc/mainUI.png)
 
-###### Your can follow below steps to control the drone, sensor and do the firmware attestation: 
+###### Control the drone, sensor and do the firmware attestation
 
-1. Click the "**UAV Connect**" button under the title line, if the done response correctly the drone state will change to green and the indicator will show "UAV_Online".
+1. Click the "**UAV Connect**" button under the title line, if the done responses correctly the "drone state" indicator in UI will change to green and the indicator will show "UAV_Online".
 
 2. The sensor will connect to the program automatically. When the ESP8266 Arduino connected to the program, the sensor indicator will change to green and show "SEN_Online". 
 
@@ -102,14 +128,19 @@ After the init finish show in your terminal:
 4. The latest battery reading will be shown on the left-top corner of the front camera view panel and the height of the drone will be shown on the right side of the the lowest skyline horizontal indicator. The battery reading show in the title bar is the average reading in the passed 10 seconds. 
 
 5. Drone track path planning: 
-   - Add a track: Open the track record file "TrackPath.txt"(under src folder)  and add the track by below format: TrackName**;**action 1**;**action x**;**action x**;**action x**;**action x**;**action x**;**land (example:*Track1;takeoff;command;up 30;ccw 30;up 30;ccw 30;up 30;land* . If you don't set the land cmd the program will add the land cmd automatically. For the action please check the detail drone control protocol in Tello SDK Documentation EN_1.3_1122.pdf under doc folder ) 
-   - Select the track by the drop down menu and click the "Active track" button, the selected track will by executed by the drone. The current executed action will be marked as green colour. 
-
+   - Add a track: Open the track record file "TrackPath.txt" (under src folder)  and add the track by below format:
+   
+  > TrackName**;**action 1**;**action x**;**action x**;**action x**;**action x**;**action x**;**land (example:*Track1;takeoff;command;up 30;ccw 30;up 30;ccw 30;up 30;land* .
+   
+     If you don't set the land cmd, the program will add the land cmd automatically. For the action setting part, please check the detail drone control protocol in Tello SDK Documentation EN_1.3_1122.pdf under doc folder ) 
+   
+   - Select the track in the drop down menu and click the "Active track" button, the selected track will by executed by the drone. The current executed action will be marked as green color. 
+   
 6. Sensor Firmware Attestation Control:  
 
    - Fill attestation times you want to do and the memory block size, then press the "startPatt" button. The local firmware and the sensor firmware will be shown and compared. The attestation result and total time used for the attestation process will be shown as below (The attestation process will take about 8sec ~ 10 sec): 
 
-   - ![](https://github.com/LiuYuancheng/DJI_Tello_Ctrl/blob/master/doc/attestFail.jpg)
+   - ![](doc/attestFail.jpg)
 
    - Every attestation result will be record in the "checkSumRecord.txt" (source folder) under format: 
 
@@ -124,4 +155,6 @@ After the init finish show in your terminal:
 7. Press the '>>' button under the title bar the drone detail status information display window will pop-up on the right.
 
 ------
+
+> Last edit by LiuYuancheng(liu_yuan_cheng@hotmail.com) at 29/01/2020
 
