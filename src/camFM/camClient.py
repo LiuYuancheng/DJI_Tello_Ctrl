@@ -1,34 +1,70 @@
-import cv2
+#!/usr/bin/python
+#-----------------------------------------------------------------------------
+# Name:        cameraClient.py
+#
+# Purpose:     This module will create a camera firmware PATT checking function
+#              
+# Author:       Yuancheng Liu
+#
+# Created:     2020/03/16
+# Copyright:   YC @ Singtel Cyber Security Research & Development Laboratory
+# License:     YC
+#-----------------------------------------------------------------------------
+
 import io
+import time
+import cv2
 import socket
 import struct
-import time
 import pickle
-import zlib
 
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect(('192.168.1.124', 8485))
-connection = client_socket.makefile('wb')
+import udpCom
+UDP_PORT = 5005
 
-cam = cv2.VideoCapture(0)
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+class camClient(object):
+    def __init__(self):
+        self.server = udpCom.udpServer(None, UDP_PORT)
+        self.cam = cv2.VideoCapture(0)
+        self.encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+        self.setResolution(640, 480)
 
-cam.set(3, 320);
-cam.set(4, 240);
+#-----------------------------------------------------------------------------
+    def run(self):
+        print("Server thread run() start.")
+        self.server.serverStart(handler=self.msgHandler)
+        print("Server thread run() end.")
 
-img_counter = 0
+#-----------------------------------------------------------------------------
+    def setResolution(self, w, h):
+        self.cam.set(3, w//2)
+        self.cam.set(4, h//2)
 
-encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+#-----------------------------------------------------------------------------
+    def msgHandler(self, msg):
+        """ The test handler method passed into the UDP server to handle the 
+            incoming messages.
+        """
+        print("Incomming message: %s" % str(msg))
+        _, frame = self.cam.read()
+        data = pickle.dumps(frame, 0)
+        size = len(data)
+        print(size)
+        msg = struct.pack(">L", size) + data
+        return msg
 
-while True:
-    ret, frame = cam.read()
-    result, frame = cv2.imencode('.jpg', frame, encode_param)
-#    data = zlib.compress(pickle.dumps(frame, 0))
-    data = pickle.dumps(frame, 0)
-    size = len(data)
+#-----------------------------------------------------------------------------
+    def termiate(self):
+        self.cam.release()
 
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+def main():
+    cam = camClient()
+    cam.run()
 
-    print("{}: {}".format(img_counter, size))
-    client_socket.sendall(struct.pack(">L", size) + data)
-    img_counter += 1
+#-----------------------------------------------------------------------------
+if __name__ == '__main__':
+    main()
 
-cam.release()

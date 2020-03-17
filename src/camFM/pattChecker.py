@@ -14,8 +14,6 @@
 import random
 from datetime import datetime
 
-import globalVal as gv
-
 # parameters used by PATT firmware attestation.
 RANDOM_RANGE_MAX = 10000
 RANDOM_RANGE_MIN = 1000
@@ -107,7 +105,7 @@ def testCase():
     else:
         print("Empty address last calcuation test Fail.")
     # Verifier check test
-    verifier= pattChecker(4, 'firmwareSample')
+    verifier = pattChecker(4, 'firmwareSample')
     addrList = verifier.getAddrList()
     verifierChSm = verifier.getCheckSum()
     testChSm = tester.getCheckSum(address_list=addrList)
