@@ -20,15 +20,18 @@ import pickle
 
 import udpCom
 UDP_PORT = 5005
+BUFFER_SZ = 4096
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class camClient(object):
     def __init__(self):
         self.server = udpCom.udpServer(None, UDP_PORT)
-        self.cam = cv2.VideoCapture(0)
+        #self.cam = cv2.VideoCapture(0)
+        self.cam = cv2.VideoCapture('my_video.h264') #play back the presave the video.
         self.encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
         self.setResolution(640, 480)
+        self.data = None # image data.
 
 #-----------------------------------------------------------------------------
     def run(self):
@@ -38,20 +41,30 @@ class camClient(object):
 
 #-----------------------------------------------------------------------------
     def setResolution(self, w, h):
-        self.cam.set(3, w//2)
-        self.cam.set(4, h//2)
+        self.cam.set(3, w)
+        self.cam.set(4, h)
 
 #-----------------------------------------------------------------------------
     def msgHandler(self, msg):
         """ The test handler method passed into the UDP server to handle the 
             incoming messages.
         """
-        print("Incomming message: %s" % str(msg))
-        _, frame = self.cam.read()
-        data = pickle.dumps(frame, 0)
-        size = len(data)
-        print(size)
-        msg = struct.pack(">L", size) + data
+        #print("Incomming message: %s" % str(msg))
+        if msg == b'new':
+            # read a new camera image data.
+            _, image = self.cam.read()
+            result, frame = cv2.imencode('.jpg', image, self.encode_param)
+            self.data = pickle.dumps(frame, 0)
+            size = len(self.data)
+            print(str(size))
+            msg = str(size)
+        else:
+            if len(self.data) > BUFFER_SZ:
+                msg = self.data[:BUFFER_SZ]
+                self.data = self.data[BUFFER_SZ:]
+            else:
+                msg = self.data
+            print(len(msg))
         return msg
 
 #-----------------------------------------------------------------------------

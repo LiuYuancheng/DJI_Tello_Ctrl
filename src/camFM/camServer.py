@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #-----------------------------------------------------------------------------
-# Name:        cameraClient.py
+# Name:        cameraServer.py
 #
 # Purpose:     This module will create a camera firmware PATT checking function
 #              
@@ -18,14 +18,15 @@ import pickle
 import numpy as np
 import struct ## new
 import zlib
-
+import math
+import time
 
 import udpCom
 # image transfer : https://gist.github.com/kittinan/e7ecefddda5616eab2765fdb2affed1b
 # motion detection: geeksforgeeks.org/webcam-motion-detector-python/
 
-HOST=''
 UDP_PORT = 5005
+BUFFER_SZ = 4096
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
@@ -34,26 +35,35 @@ class camServer(object):
         self.payload_size = struct.calcsize(">L")
         self.client = udpCom.udpClient(('172.27.142.65', UDP_PORT))
         self.motion_list = [ None, None ] 
+        self.static_back = None
         self.termiate = False
-
+        
+#-----------------------------------------------------------------------------
     def run(self):
-        data = b""
+        data = b''
         while not self.termiate:
-            while len(data) < self.payload_size:
+            result = self.client.sendMsg(b'new', resp=True)
+            data = b""
+            imgSz = int(result.decode('utf-8'))
+            print(imgSz)
+            rcvRoudn = math.ceil(imgSz/4096.0)
+            #print(rcvRoudn)
+            for _ in range(int(rcvRoudn)):
                 result = self.client.sendMsg(b'img', resp=True)
                 data += result
-            packed_msg_size = data[:self.payload_size]
-            data = data[self.payload_size:]
-            msg_size = struct.unpack(">L", packed_msg_size)[0]
-            frame_data = data[:msg_size]
-            data = data[msg_size:]
-            try:
-                frame=pickle.loads(frame_data, fix_imports=True, encoding="bytes")
-                frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
-                self.tgtDect(frame)
-            except:
-                print("incomming image error")
+            frame_data = data
+            print(len(frame_data))
+            #try:
+            frame=pickle.loads(frame_data, fix_imports=True, encoding="bytes")
+            frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+            
+            
+            self.tgtDect(frame)
+            time.sleep(0.1)
+            #except:
+            #    print("incomming image error")
 
+#-----------------------------------------------------------------------------
     def tgtDect(self, frame):
         motion = 0
         # Converting color image to gray_scale image 
@@ -65,13 +75,13 @@ class camServer(object):
     
         # In first iteration we assign the value  
         # of static_back to our first frame 
-        if static_back is None: 
-            static_back = gray
+        if self.static_back is None: 
+            self.static_back = gray
             return
 
         # Difference between static background  
         # and current frame(which is GaussianBlur) 
-        diff_frame = cv2.absdiff(static_back, gray) 
+        diff_frame = cv2.absdiff(self.static_back, gray) 
     
         # If change in between static background and 
         # current frame is greater than 30 it will show white color(255) 
@@ -82,10 +92,9 @@ class camServer(object):
         cnts, _ = cv2.findContours(thresh_frame.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) 
     
         for contour in cnts: 
-            if cv2.contourArea(contour) < 10000: 
-                return
+            if cv2.contourArea(contour) <3600:
+                continue
             motion = 1
-    
             (x, y, w, h) = cv2.boundingRect(contour) 
             # making green rectangle arround the moving object 
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 3) 

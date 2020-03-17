@@ -47,7 +47,7 @@ class pattChecker(object):
         if not (address_list is None): self.addrList = address_list
         if len(self.addrList) == 0:  return None 
         verifier_checksum = self._calculate_sigma_star(self.addrList, self.fmPath)
-        print("firmware sum %s" %str(verifier_checksum))
+        #print("firmware sum %s" %str(verifier_checksum))
         return str(verifier_checksum)
 
 #-----------------------------------------------------------------------------
