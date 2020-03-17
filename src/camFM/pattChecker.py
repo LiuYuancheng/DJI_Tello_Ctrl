@@ -16,21 +16,26 @@ from datetime import datetime
 
 import globalVal as gv
 
+# parameters used by PATT firmware attestation.
+RANDOM_RANGE_MAX = 10000
+RANDOM_RANGE_MIN = 1000
+FULL_MEMORY_SIZE_NODE_MCU = 64
+WORD_SIZE = 16
+BOOT_LOADER_OFFSET = 256
+
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
-class camPATTChecker(object):
-    """ TCP server thread.""" 
-    def __init__(self, parent):
-        self.checkSumfh = None  # filehandler to record the checksum.
-        self.blockNum = 4       # memory block size.
-        self.stated = 'safe'    # Patt attestation result.
-        # Do one PATT check.
-        self.getCheckSum(self.blockNum)
-        self.addrList= []
+class pattChecker(object):
+    """ Patt firmware attestation checker""" 
+    def __init__(self, blockNum, fmPath):
+        self.checkSumfh = None      # filehandler to record the checksum.
+        self.blockNum = blockNum    # memory block size.
+        self.fmPath = fmPath        # Firmware path
+        self.addrList= []           # PATT memory address
 
 #-----------------------------------------------------------------------------
     def getAddrList(self):
-        """ Return the PATT check address list.
+        """ Return the PATT random memory address.
         """
         [sb, sw] = self._generate_sb_and_sw()
         rhos = self._generate_random_block_select_list(sb, sw, self.blockNum)
@@ -38,30 +43,14 @@ class camPATTChecker(object):
         return self.addrList
 
 #-----------------------------------------------------------------------------
-    def getCheckSum(self, number_of_blocks):
+    def getCheckSum(self, address_list=None):
         """ Get the local firmware checkSum and the sensor feed back checkSum."""
-        # Get the random memory address.
-        s_b_and_s_w = self._generate_sb_and_sw()
-        rhos = self._generate_random_block_select_list(
-            s_b_and_s_w[0], s_b_and_s_w[1], number_of_blocks)
-        address_list = self._generate_all_address(
-            s_b_and_s_w[1], rhos, number_of_blocks)
         # Get the firmware from the local pre-saved firmware.
-        verifier_checksum = self._calculate_sigma_star(address_list, gv.SEFM_FILE)
-        print("telloSensor : verifier check sum %s" %
-              str(verifier_checksum))
-        # Connect to the sensor to get the firmware check sum.
-        sensor_checksum = self._calculate_sigma_star(address_list, gv.CLFM_FILE)
-        print("telloSensor : sensor check sum %s" %
-              str(verifier_checksum))
-        #self.checkSumfh.write(str(verifier_checksum)+"\n")
-        #self.checkSumfh.write(str(sensor_checksum) + "\n")
-        if str(verifier_checksum) != str(sensor_checksum):
-            print("The check sum are different. Attestaion Failed.")
-            self.stated = 'unsafe'
-        else:
-            print("The check sum are same. Attestation successful.")
-            self.stated = 'safe'
+        if not (address_list is None): self.addrList = address_list
+        if len(self.addrList) == 0:  return None 
+        verifier_checksum = self._calculate_sigma_star(self.addrList, self.fmPath)
+        print("firmware sum %s" %str(verifier_checksum))
+        return str(verifier_checksum)
 
 #-----------------------------------------------------------------------------
     def _calculate_sigma_star(self, address_list, firmwFile):
@@ -77,7 +66,7 @@ class camPATTChecker(object):
     def _generate_sb_and_sw(self):
         """ Cenerate sb and sw LYC: (what are sb and sw stand for?)"""
         random.seed(datetime.now())
-        return [random.randint(gv.RANDOM_RANGE_MIN, gv.RANDOM_RANGE_MAX) for i in range(2)]
+        return [random.randint(RANDOM_RANGE_MIN, RANDOM_RANGE_MAX) for i in range(2)]
 
 #-----------------------------------------------------------------------------
     def _generate_random_block_select_list(self, s_b, s_w, number_of_blocks):
@@ -89,30 +78,45 @@ class camPATTChecker(object):
     def _generate_all_address(self, s_w, rhos, number_of_blocks):
         """ generate the randome memory address PATT need to check.
         """
-        number_of_words = int(gv.FULL_MEMORY_SIZE_NODE_MCU // number_of_blocks)
+        number_of_words = int(FULL_MEMORY_SIZE_NODE_MCU // number_of_blocks)
         all_address_list = list()
         for rho in rhos:
             beta_list = self._generate_beta_list_for_block(
                 s_w, rho, number_of_words)
             for line, beta in enumerate(beta_list):
-                address = (gv.BOOT_LOADER_OFFSET + line + (rho-1)
-                           * number_of_words) * gv.WORD_SIZE + beta
+                address = (BOOT_LOADER_OFFSET + line + (rho-1)
+                           * number_of_words) * WORD_SIZE + beta
                 all_address_list.append(address)
         return all_address_list
 
 #-----------------------------------------------------------------------------
     def _generate_beta_list_for_block(self, s_w, rho, number_of_words):
         random.seed(rho ^ s_w)
-        beta_list = [random.randint(0, gv.WORD_SIZE - 1) for _ in range(number_of_words)]
+        beta_list = [random.randint(0, WORD_SIZE - 1) for _ in range(number_of_words)]
         return beta_list
 
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
-def main():
-    _ = camPATTChecker(None)
+def testCase():
+    print("Start the PATT test : ")
+    # Empty address list calculation test:
+    tester = pattChecker(4, 'firmwareSample')
+    if tester.getCheckSum() == None:
+        print("Empty address last calcuation test pass.")
+    else:
+        print("Empty address last calcuation test Fail.")
+    # Verifier check test
+    verifier= pattChecker(4, 'firmwareSample')
+    addrList = verifier.getAddrList()
+    verifierChSm = verifier.getCheckSum()
+    testChSm = tester.getCheckSum(address_list=addrList)
+    if verifierChSm == testChSm:
+        print("PATT attestation calcuation test pass.")
+    else:
+        print("PATT attestation calcuation test Fail.")
 
 #-----------------------------------------------------------------------------
 if __name__ == '__main__':
-    main()
+    testCase()
 
