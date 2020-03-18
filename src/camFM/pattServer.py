@@ -36,7 +36,7 @@ class pattServer(object):
             print('The camera firmware attestation successful')
         else:
             print('Patt check result: verifierChechsum != camreaCheckSum')
-            print('The camera firmware attestation successful')
+            print('The camera firmware attestation fail.')
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
