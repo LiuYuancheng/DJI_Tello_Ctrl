@@ -56,8 +56,6 @@ class camServer(object):
             #try:
             frame=pickle.loads(frame_data, fix_imports=True, encoding="bytes")
             frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
-            
-            
             self.tgtDect(frame)
             time.sleep(0.1)
             #except:
@@ -65,6 +63,8 @@ class camServer(object):
 
 #-----------------------------------------------------------------------------
     def tgtDect(self, frame):
+        """ motion detection function.
+        """
         motion = 0
         # Converting color image to gray_scale image 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 

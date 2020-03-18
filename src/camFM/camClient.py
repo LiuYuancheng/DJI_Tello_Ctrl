@@ -56,7 +56,6 @@ class camClient(object):
             result, frame = cv2.imencode('.jpg', image, self.encode_param)
             self.data = pickle.dumps(frame, 0)
             size = len(self.data)
-            print(str(size))
             msg = str(size)
         else:
             if len(self.data) > BUFFER_SZ:
