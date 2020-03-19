@@ -1,8 +1,9 @@
 #!/usr/bin/python
 #-----------------------------------------------------------------------------
-# Name:        cameraClient.py
+# Name:        pattClient.py
 #
-# Purpose:     This module will create a camera firmware PATT checking function
+# Purpose:     This module create a file PATT check client and feed back the 
+#              PATT value when the server connect to it.
 #              
 # Author:       Yuancheng Liu
 #
@@ -19,15 +20,20 @@ UDP_PORT = 5006
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class pattClient(object):
-    def __init__(self):
-        self.tester = patt.pattChecker(4, 'firmwareSample')
+    def __init__(self, filePath=None):
+        """ Create a UDP server and feed back the checked file's PATT value 
+            when the client connect to it.
+            Init example: checker = pattClient(filePath='firmwareSample')
+        """
+        blockNum = 4
+        self.tester = patt.pattChecker(blockNum, filePath)
         self.server = udpCom.udpServer(None, UDP_PORT)
 
     #-----------------------------------------------------------------------------
     def run(self):
-        print("Server thread run() start.")
+        print("PATT checker client run() start.")
         self.server.serverStart(handler=self.msgHandler)
-        print("Server thread run() end.")
+        print("PATT checker client run() end.")
 
     #-----------------------------------------------------------------------------
     def msgHandler(self, msg):
@@ -39,12 +45,11 @@ class pattClient(object):
         testChSm = self.tester.getCheckSum(address_list=[int(i) for i in addrList])
         return testChSm
 
-
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 def main():
-    cam = pattClient()
-    cam.run()
+    checker = pattClient(filePath='firmwareSample')
+    checker.run()
 
 #-----------------------------------------------------------------------------
 if __name__ == '__main__':
