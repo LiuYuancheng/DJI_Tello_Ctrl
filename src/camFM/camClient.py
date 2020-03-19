@@ -22,7 +22,7 @@ import pickle
 import cv2
 import udpCom
 UDP_PORT = 5005
-BUFFER_SZ = 4096
+BUFFER_SZ = udpCom.BUFFER_SZ
 TEST_MD = True # test mode flag
 
 #-----------------------------------------------------------------------------
