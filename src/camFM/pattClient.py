@@ -3,7 +3,7 @@
 # Name:        pattClient.py
 #
 # Purpose:     This module create a file PATT check client and feed back the 
-#              PATT value when the server connect to it.
+#              PATT value when the server connect and send address list to it.
 #              
 # Author:       Yuancheng Liu
 #
@@ -37,10 +37,9 @@ class pattClient(object):
 
     #-----------------------------------------------------------------------------
     def msgHandler(self, msg):
-        """ The test handler method passed into the UDP server to handle the 
-            incoming messages.
+        """ Calculate the 
         """
-        print("Incomming message: %s" % str(msg))
+        print("Incomming address list: %s" % str(msg))
         addrList = msg.decode('utf-8').split(';')
         testChSm = self.tester.getCheckSum(address_list=[int(i) for i in addrList])
         return testChSm

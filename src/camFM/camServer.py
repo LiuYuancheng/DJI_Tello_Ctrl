@@ -24,31 +24,31 @@ import numpy as np
 import udpCom
 # image transfer : https://gist.github.com/kittinan/e7ecefddda5616eab2765fdb2affed1b
 
-
 UDP_PORT = 5005
 BUFFER_SZ = udpCom.BUFFER_SZ
-TEST_MD = True # test mode flag
-FRAME_RT = 10   # frame rate.
+TEST_MD = True  # test mode flag
+FRAME_RT = 10   # camera frame rate
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class camServer(object):
     def __init__(self, camIP):
-        """ Init the UDP client and motion detection handler.
+        """ Init the image fetch UDP client and motion detection handler.
             Init example : cam = camServer(camIP='172.27.142.65')
         """
         self.client = udpCom.udpClient((camIP, UDP_PORT))
-        self.static_back = None
-        self.diffLvl = 30 # motion changed level which will be detected.(small-sensitive)
-        self.contourIgnRng = (400, 10000) # contour ingore range. target not in range will be ingored.
-        self.termiate = False
-        self.showDiff = True    # flag to whether to show the differency frame.
+        self.staticBack = None
+        self.diffLvl = 30       # Motion changed level which will be detected.(smaller->sensitive)
+        self.contourIgnRng = (400, 10000) # contour ingore range. target not in range will be ingnored.
+        self.termiate = False   # program terminate flag
+        self.showDiff = False    # flag to whether to show the difference frame.
 
 #-----------------------------------------------------------------------------
     def run(self):
+        """ main loop to fetch image bytes from the camera client."""
         imgData = b'' # imagedata
         while not self.termiate:
-            # get ta new image from the camera
+            # get a new image from the camera
             imgData = b''
             result = self.client.sendMsg(b'new', resp=True)
             imgSz = int(result.decode('utf-8'))
@@ -58,17 +58,16 @@ class camServer(object):
                 imgData += self.client.sendMsg(b'img', resp=True)
             # Check whether the image size is same as the sent one.
             if imgSz != len(imgData):
-                print("Error: some image byte lose")
+                print("Error: some image byte lose!")
                 continue
             frame = cv2.imdecode(pickle.loads(
                 imgData, fix_imports=True, encoding="bytes"), cv2.IMREAD_COLOR)
             self.detectTgt(frame)
             # if q entered whole process will stop 
             if cv2.waitKey(1) == ord('q'):
-                break 
+                self.termiate = True 
             time.sleep(1/FRAME_RT)
-        
-        # Destroying all the windows.        
+        # Destroying all the windows when user quit.        
         cv2.destroyAllWindows() 
 
 #-----------------------------------------------------------------------------
@@ -77,40 +76,38 @@ class camServer(object):
             opencv default window.
             reference: https://www.geeksforgeeks.org/webcam-motion-detector-python/
         """
-        motion = 0
-        # Converting color image to gray_scale image 
+        # Converting colour image to gray_scale image.
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
-        # Converting gray scale image to GaussianBlur  
+        # Converting gray scale image to GaussianBlur.
         gray = cv2.GaussianBlur(gray, (21, 21), 0) 
-        # In first iteration we assign the value of static_back to our first frame  
-        if self.static_back is None: 
-            self.static_back = gray # use the first image as a reference.
+        # In first iteration we assign the value of staticBack to our first frame.
+        if self.staticBack is None: 
+            self.staticBack = gray # use the first image as a reference.
             return
-        # Difference between static background and current frame(which is GaussianBlur) 
-        diffFrame = cv2.absdiff(self.static_back, gray) 
+        # Difference between static background and current frame (which is GaussianBlur) 
+        diffFrame = cv2.absdiff(self.staticBack, gray) 
         # If change in between static background and current frame is greater than 30 
-        # it will show white color(255) 
+        # it will show white color(255).
         threshFrame = cv2.threshold(diffFrame, self.diffLvl, 255, cv2.THRESH_BINARY)[1] 
         threshFrame = cv2.dilate(threshFrame, None, iterations = 2) 
-        # Finding contour of moving object 
+        # Finding contour of moving object.
         cnts, _ = cv2.findContours(threshFrame.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) 
         # old opencv version use the below line:
         # _, cnts, _ = cv2.findContours(threshFrame.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) 
         for contour in cnts: 
             if self.contourIgnRng[0]< cv2.contourArea(contour) < self.contourIgnRng[1]:
                 (x, y, w, h) = cv2.boundingRect(contour) 
-                # making green rectangle arround the moving object 
+                # Making green rectangles around the moving object.
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 3) 
-        # show the difference compare frame or the detection tracking frame.
+        # Show the difference compare frame or the detection tracking frame.
         if self.showDiff:
-            cv2.imshow('ImageWindow',diffFrame)
+            cv2.imshow('Different Gray-Scale Image',diffFrame)
         else:
-            cv2.imshow('ImageWindow',frame)
+            cv2.imshow('Target Detection Image',frame)
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 def main():
-
     camIp = '127.0.0.1' if TEST_MD else '172.27.142.65'
     cam = camServer(camIp)
     cam.run()

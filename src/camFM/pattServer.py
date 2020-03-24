@@ -2,7 +2,9 @@
 #-----------------------------------------------------------------------------
 # Name:        pattServer.py
 #
-# Purpose:     This module will create a PATT file checker program
+# Purpose:     This module will create a PATT file checker program. It will 
+#              send the PATT bytes check list to the client and compare the 
+#              feedback PATT value.
 #              
 # Author:       Yuancheng Liu
 #
@@ -16,25 +18,31 @@ import pattChecker as patt
 
 UDP_PORT = 5006
 TEST_MD = True # test mode flag
+FM_PATH = "firmwareSample" # Firmware path need to check.
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 class pattServer(object):
-    def __init__(self, clientIP):
+    def __init__(self, clientIP=None):
         """ Create a UDP server and feed back the checked file's PATT value 
             when the client connect to it.
-            Init example: checker = pattClient(filePath='firmwareSample')
+            Init example: checker = pattServer(clientIP='127.0.0.1')
         """
         blockNum = 4
-        self.verifier = patt.pattChecker(blockNum, 'firmwareSample')
-        #self.client = udpCom.udpClient(('172.27.142.65', UDP_PORT))
-        self.client = udpCom.udpClient(('127.0.0.1', UDP_PORT))
+        # Init the PATT calculator.
+        self.verifier = patt.pattChecker(blockNum, FM_PATH)
+        # Init the communicate UDP client.
+        if clientIP is None: clientIP = '127.0.0.1' 
+        self.client = udpCom.udpClient((clientIP, UDP_PORT))
 
 #-----------------------------------------------------------------------------
     def run(self):
-        addrList = self.verifier.getAddrList()
+        """ Calculate the local file's PATT value and send the check address 
+            to the client program, the compare the feed back value.
+        """
+        # Call the get getAddrList() to generate the random address dynamically 
+        addrStr = ';'.join([str(i) for i in self.verifier.getAddrList()])
         verifierChSm = self.verifier.getCheckSum()
-        addrStr = ';'.join([str(i) for i in addrList])
         result = self.client.sendMsg(addrStr, resp=True)
         print('Local_PATT: %s' %verifierChSm)
         print('CameraPATT: %s' %result.decode('utf-8'))
@@ -48,7 +56,7 @@ class pattServer(object):
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
 def main():
-    clientip = '127.0.0.1' if TEST_MD else 172.27.142.65
+    clientip = '127.0.0.1' if TEST_MD else "172.27.142.65"
     pattSer = pattServer(clientIP = clientip)
     pattSer.run()
 
