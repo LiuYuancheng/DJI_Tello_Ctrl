@@ -26,6 +26,8 @@ import udpCom
 
 UDP_PORT = 5005
 BUFFER_SZ = udpCom.BUFFER_SZ
+CONFIG_FILE = 'camServerConfig.txt'
+
 TEST_MD = True  # test mode flag
 FRAME_RT = 10   # camera frame rate
 
@@ -41,7 +43,8 @@ class camServer(object):
         self.diffLvl = 30       # Motion changed level which will be detected.(smaller->sensitive)
         self.contourIgnRng = (400, 10000) # contour ingore range. target not in range will be ingnored.
         self.termiate = False   # program terminate flag
-        self.showDiff = False    # flag to whether to show the difference frame.
+        self.showDiff = False   # flag to whether to show the difference frame.
+        self.frameRate = 10     
 
 #-----------------------------------------------------------------------------
     def run(self):
