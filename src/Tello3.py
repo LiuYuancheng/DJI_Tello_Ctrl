@@ -51,9 +51,9 @@ while True:
         version_init_num = int(python_version.partition('.')[0]) 
        # print (version_init_num)
         if version_init_num == 3:
-            msg = input("");
+            msg = input("")
         elif version_init_num == 2:
-            msg = raw_input("");
+            msg = raw_input("")
         
         if not msg:
             break  

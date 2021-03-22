@@ -95,7 +95,7 @@ class PanelDetail(wx.Panel):
 #--PanelDetail-----------------------------------------------------------------
     def _buidUISizer(self):
         """ Build the main UI sizer for the panel."""
-        flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
+        flagsR = wx.RIGHT #| wx.ALIGN_CENTER_VERTICAL
         mSizer = wx.BoxSizer(wx.VERTICAL)
         mSizer.AddSpacer(5)
         mSizer.Add(wx.StaticText(self, label="Detail Info:"),
@@ -151,8 +151,8 @@ class TrackCtrlPanel(wx.Panel):
     def _buidUISizer(self):
         """ Build the main UI sizer for the panel."""
         mSizer = wx.BoxSizer(wx.VERTICAL)
-        flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
-        flagsC = wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_CENTER_VERTICAL
+        flagsR = wx.RIGHT #| wx.ALIGN_CENTER_VERTICAL
+        flagsC = wx.CENTER #| wx.ALIGN_CENTER_VERTICAL
         # Row Idx 0 : Track control area.
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(wx.StaticText(
@@ -259,7 +259,7 @@ class SensorCtrlPanel(wx.Panel):
 #--SensorCtrlPanel-------------------------------------------------------------
     def _buidUISizer(self):
         """ Build the main UI sizer for the panel."""
-        flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
+        flagsR = wx.RIGHT #| wx.ALIGN_CENTER_VERTICAL
         mSizer = wx.BoxSizer(wx.VERTICAL)
         # row idx 0 : basic patt setting.
         hbox0 = wx.BoxSizer(wx.HORIZONTAL)

@@ -3,7 +3,7 @@
 # Name:        TelloRun.py
 #
 # Purpose:     This module is used to create a controller for the DJI Tello Drone
-#              and connect to the Arduino_ESP8266 to get the height sensor data.
+#              and connect to the Arduino_ESP8266 to get the distance sensor data.
 #
 # Author:      Yuancheng Liu
 #
@@ -27,14 +27,14 @@ import telloSensor as ts
 
 # The keyboad key to control the drone.
 KEY_CODE = {
-    '87'    : 'up 30',      # Key 'w'
-    '83'    : 'down 30',    # key 's'
-    '65'    : 'cw 30',      # key 'a'
-    '68'    : 'ccw 30',     # key 'd'
-    '315'   : 'forward 30', # key 'up'
-    '314'   : 'left 30',    # key 'left'
-    '316'   : 'right 30',   # key 'right'
-    '317'   : 'back 30'     # key 'back'
+    '87'    : 'up 30',      # Keyboard 'w'
+    '83'    : 'down 30',    # Keyboard 's'
+    '65'    : 'cw 30',      # Keyboard 'a'
+    '68'    : 'ccw 30',     # Keyboard 'd'
+    '315'   : 'forward 30', # Keyboard 'up'
+    '314'   : 'left 30',    # Keyboard 'left'
+    '316'   : 'right 30',   # Keyboard 'right'
+    '317'   : 'back 30'     # Keyboard 'back'
 }
 
 PERIODIC = 100  # main thread periodically callback by 10ms.
@@ -87,14 +87,16 @@ class telloFrame(wx.Frame):
         pSizer.AddSpacer(5)
         lSize = (length, -1) if lStyle == wx.LI_HORIZONTAL else (-1, length)
         pSizer.Add(wx.StaticLine(self, wx.ID_ANY, size=lSize,
-                                 style=lStyle), flag=wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, border=2)
+                                 style=lStyle), wx.CENTER, border=2)
         pSizer.AddSpacer(5)
 
 #--<telloFrame>----------------------------------------------------------------
     def _buidUISizer(self):
         """ Build the main UI sizer of the frame."""
-        flagsR = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
-        flagsC = wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_CENTER_VERTICAL
+        #flagsR = wx.RIGHT | wx.CENTER
+        flagsR = wx.RIGHT 
+        #flagsC = wx.ALIGN_CENTER_HORIZONTAL | wx.CENTER
+        flagsC = wx.ALIGN_CENTER_HORIZONTAL 
         mSizer = wx.BoxSizer(wx.VERTICAL)
         mSizer.AddSpacer(5)
         # Row Idx = 0 : state diaplay
@@ -130,7 +132,7 @@ class telloFrame(wx.Frame):
 #--<telloFrame>----------------------------------------------------------------
     def _buildCtrlSizer(self):
         """ Build the Drone control sizer with all the control buttons."""
-        mSizer, flagsR = wx.BoxSizer(wx.HORIZONTAL), wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
+        mSizer, flagsR = wx.BoxSizer(wx.HORIZONTAL), wx.RIGHT #| wx.CENTER
         mSizer.AddSpacer(10)
         # Control list element: (sizer, cmd list, button bitmap png file list.)
         ctrlList = ((wx.GridSizer(2, 3, 5, 5), gv.YA_CMD_LIST, gv.YA_PNG_LIST),
@@ -153,7 +155,7 @@ class telloFrame(wx.Frame):
 #--<telloFrame>----------------------------------------------------------------
     def _buildStateSizer(self):
         """ Build the UAV + sensor state display sizer."""
-        flagsR, dtColor = wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, wx.Colour(120, 120, 120)
+        flagsR, dtColor = wx.RIGHT, wx.Colour(120, 120, 120)
         mSizer = wx.BoxSizer(wx.HORIZONTAL)
         mSizer.AddSpacer(5)
         self.connectBt = wx.Button(self, label='UAV Connect', size=(90, 20))
