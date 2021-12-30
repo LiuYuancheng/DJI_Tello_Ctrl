@@ -1,5 +1,9 @@
 # DJI_Tello_Ctrl
 
+> All rights reserved by NUS-Singtel Cyber Security R&D Lab (Jun 2016 to Jun 2021)
+
+
+
 #### 1. Introduction
 
 This project contains two sections: 
@@ -127,11 +131,11 @@ After the program initialization finished, the below message will show in your t
    - Add a track: Open the track record file "TrackPath.txt" (under src folder)  and add the track by below format:
    
   > TrackName**;**action 1**;**action x**;**action x**;**action x**;**action x**;**action x**;**land (example:*Track1;takeoff;command;up 30;ccw 30;up 30;ccw 30;up 30;land* .
-   
+
      >  If you don't set the land cmd, the program will add the land cmd automatically. For the action setting part, please check the detail drone control protocol in Tello SDK Documentation EN_1.3_1122.pdf under doc folder ) 
-   
+
    - Select the track in the drop down menu and click the "Active track" button, the selected track will by executed by the drone. The current executed action will be marked as green color. 
-   
+
 6. Sensor Firmware Attestation Control:  
 
    - Fill attestation times you want to do and the memory block size, then press the "startPatt" button. The local firmware and the sensor firmware will be shown and compared. The attestation result and total time used for the attestation process will be shown as below (The attestation process will take about 8sec ~ 10 sec): 
