@@ -12,8 +12,9 @@
 #-----------------------------------------------------------------------------
 import os
 
-dirpath = os.getcwd()
-print("Current working directory is : %s" %dirpath)
+print("Current working directory is : %s" %str(os.getcwd()))
+dirpath = os.path.dirname(__file__)
+print("Current source code location : %s" % dirpath)
 
 APP_NAME = 'DJI Tello Ctrl'
 
