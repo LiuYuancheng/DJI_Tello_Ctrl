@@ -24,13 +24,13 @@ In this section we will create a firmware program running on the ESP8266 Arduino
 
 The main user interface to control the drone and check the sensor state is shown below:
 
-![](doc/2019-10-18_123002.jpg)
+![](doc/img/2019-10-18_123002.jpg)
 
 ##### Hardware View (Done with sensors installed)
 
 The Two sensors doing terrain matching are mounted under the drone as shown below:
 
-![](doc/sernsors.JPG)
+![](doc/img/sernsors.JPG)
 
 `version: v_0.2`
 
@@ -66,7 +66,7 @@ pip install opencv-python
 
 We use DJI Tello Drone, ESP8266 Arduino and HC-SR04 Ultrasonic Sensor to build the system: 
 
-![](doc/item.jpg)
+![](doc/img/item.jpg)
 
 [DJI Tello ]: https://www.ryzerobotics.com/tello/downloads	"DJI tello control SDK"
 [ESP8266 Arduino ]: https://arduino-esp8266.readthedocs.io/en/latest/	"ESP8266 Arduino dev doc"
@@ -91,19 +91,19 @@ The control hub (Computer) will control with the drone by UDP and fetch the feed
 
 **Communication detail diagram is shown below**: 
 
-![](doc/port.png)
+![](doc/img/port.png)
 
 ###### WI-FI Connection Diagram
 
 The Tello drone will connect the computer by WI-FI. The Arduino will connect to a router first then connect to the computer. The connection diagram is shown below: 
 
-![](doc/communicate.png)
+![](doc/img/communicate.png)
 
 ###### Program Executions Diagram
 
 The main thread will start three parallel sub-thread to communicate with the Arduino, read the Tello states data and get the Tello's UDP Video stream. The main thread will handle the Tello control. Program execution UML diagram: 
 
-![](doc/workflow.png)
+![](doc/img/workflow.png)
 
 ##### Program File List 
 
@@ -139,7 +139,7 @@ After the program initialization finished, the below message will show in your t
 
  Then the main UI will show as below: 
 
-![](doc/mainUI.png)
+![](doc/img/mainUI.png)
 
 
 
@@ -166,7 +166,7 @@ After the program initialization finished, the below message will show in your t
 
    - Fill attestation times you want to do and the memory block size, then press the "**startPatt**" button. The local firmware and the sensor firmware will be shown and compared. The attestation result and total time used for the attestation process will be shown as below (The attestation process will take about 8sec ~ 10 sec): 
 
-   - ![](doc/attestFail.jpg)
+   - ![](doc/img/attestFail.jpg)
 
    - Every attestation result will be record in the "checkSumRecord.txt" (source folder) under format: 
 
@@ -183,6 +183,16 @@ After the program initialization finished, the below message will show in your t
 ------
 
 ### Problem and Solution
+
+N.A
+
+------
+
+### Reference
+
+PATT firmware attestation: 
+
+https://www.usenix.org/system/files/raid2019-ghaeini.pdf
 
 
 
