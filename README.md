@@ -4,7 +4,9 @@
 
 **Program Design Purpose**: 
 
-We want to add some distance sensors to create a terrain matching drone and demo the drown firmware attestation function to resistant the IOT firmware replacement attack. 
+We want to add some distance sensors to create a terrain matching drone and demo the drone firmware attestation function to resistant the IOT firmware replacement attack by using the PATT(Physics-based Attestation of Control Systems) algo. 
+
+
 
 [TOC]
 
@@ -19,6 +21,14 @@ In this section we will create a DJI Tello Drone controller program with the dro
 ##### **Arduino Firmware Attestation**
 
 In this section we will create a firmware program running on the ESP8266 Arduino to read the distances data from HC-SR04 Ultrasonic Sensor to do the fly environment monitoring, terrain matching function and provide the sensor firmware attestation function by using the "PATT"(PAtt: Physics-based Attestation of Control Systems) algorithm to confirm the firmware is not changed by attacker.  
+
+**Demo Link**: 
+
+https://www.youtube.com/watch?v=rRu1qrZohJY
+
+```
+[![Demo video](https://yt-embed.herokuapp.com/embed?v=rRu1qrZohJY)](https://www.youtube.com/watch?v=rRu1qrZohJY "Demo video ")
+```
 
 ##### Program Main UI View
 
