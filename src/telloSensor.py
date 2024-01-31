@@ -5,11 +5,12 @@
 # Purpose:     This module is used to create a tcp communication server to receive 
 #              the Arduino_ESP8266 height data and do the PATT attestation. 
 #              
-# Author:      Sombuddha Chakrava, Yuancheng Liu
+# Author:      Yuancheng Liu
 #
+# Version:     v_0.3.1
 # Created:     2019/10/04
-# Copyright:   YC @ Singtel Cyber Security Research & Development Laboratory
-# License:     YC
+# Copyright:   Copyright (c) 2019 LiuYuancheng
+# License:     MIT License
 #-----------------------------------------------------------------------------
 
 import time

@@ -1,9 +1,5 @@
 # DJI_Tello_Ctrl
 
-> All rights reserved by NUS-Singtel Cyber Security R&D Lab (Jun 2016 to Jun 2021)
-
-
-
 #### 1. Introduction
 
 This project contains two sections: 

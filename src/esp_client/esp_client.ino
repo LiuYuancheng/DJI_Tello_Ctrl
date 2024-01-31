@@ -9,11 +9,12 @@
 // Purpose:     This module will start a TCP client to send the HC-SR04 Ultrasonic
 //              Sensor reading to server and send the firmware checksum for attestation. 
 //              
-// Author:      Sombuddha Chakrava, Yuancheng Liu
+// Author:      Yuancheng Liu
 //
+// Version:     v_0.3.1
 // Created:     2019/10/21
-// Copyright:   YC @ Singtel Cyber Security Research & Development Laboratory
-// License:     
+// Copyright:   Copyright (c) 2019 LiuYuancheng
+// License:     MIT License
 //-----------------------------------------------------------------------------
 
 // Set the wifi ssid and pwd.

@@ -4,11 +4,13 @@
 #
 # Purpose:     This module is used to create the control and display panel for
 #              the UAV system (drone control and sensor firmware attestation).
+#
 # Author:      Yuancheng Liu
 #
+# Version:     v_0.3.1
 # Created:     2019/10/01
-# Copyright:   YC @ Singtel Cyber Security Research & Development Laboratory
-# License:     YC
+# Copyright:   Copyright (c) 2019 LiuYuancheng
+# License:     MIT License
 #-----------------------------------------------------------------------------
 import wx
 import time

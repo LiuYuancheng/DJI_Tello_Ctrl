@@ -6,9 +6,10 @@
 #              
 # Author:      Yuancheng Liu
 #
+# Version:     v_0.3.1
 # Created:     2019/10/01
-# Copyright:   YC @ Singtel Cyber Security Research & Development Laboratory
-# License:     YC
+# Copyright:   Copyright (c) 2019 LiuYuancheng
+# License:     MIT License
 #-----------------------------------------------------------------------------
 import os
 
