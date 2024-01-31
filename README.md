@@ -1,26 +1,43 @@
-# DJI_Tello_Control
+# DJI_Tello_Control [Drone Firmware attack and detection]
 
-<<<<<<< HEAD
-#### 1. Introduction
-=======
-> All rights reserved by NUS-Singtel Cyber Security R&D Lab (Jun 2016 to Jun 2021)
+**Program Design Purpose**: The objective of this cyber attack case study is to develop a workshop which use the terrain matching drone program and the firmware attestation algorithm introduced in paper [PAtt: Physics-based Attestation of Control Systems](https://www.usenix.org/system/files/raid2019-ghaeini.pdf)  for demonstrating the IoT/OT device firmware attack and the attack detection. The terrain matching drone is build by four distance sensors and DJI Tello Drone.
 
-**Program Design Purpose**: 
+**Attacker Vector** : Malicious Firmware Updates (OT), IoT Supply Chain Attacks
 
-We want to add some distance sensors to create a terrain matching drone and demo the drone firmware attestation function to resistant the IOT firmware replacement attack by using the PATT(Physics-based Attestation of Control Systems) algo. 
-
-
+> Important : The demonstrated attack case is used for education and training for different level of IT-OT cyber security ICS course, please don't apply it on any real world system.
 
 [TOC]
 
+------
+
 ### Introduction
->>>>>>> a7911471a83e5f54fd969b64073a99d8f8100d59
 
 This project contains two sections: 
 
-##### **DJI Tello Drone Control** 
+- DJI Tello Terrain Matching Drone Control 
+- 
+
+##### **DJI Tello Terrain Matching Drone Control** 
+
+In this project we add four additional distance detection sensor under a DJI Tello drone, then we use the Tello's bottom sensor and the 4 distance sensor to generate the drone bottom ground contour map, then our main drone controller will control the drone based on the contour map. For example, if we want the drone fly straight until detect a table sharp item under it, the drone will keep send the contour map to control program and if the program detect that the can match pre-saved table's feature, the control program will send the landing command to the drone.
+
+![](doc/img/terrain_match.png)
+
+
+
+
+
+
+
+
 
 In this section we will create a DJI Tello Drone controller program with the drone basic motion control, track editing function and drone motion safety check function. 
+
+
+
+
+
+
 
 ##### **Arduino Firmware Attestation**
 
