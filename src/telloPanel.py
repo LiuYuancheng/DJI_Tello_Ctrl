@@ -159,27 +159,33 @@ class TrackCtrlPanel(wx.Panel):
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(wx.StaticText(
             self, label="Track Control:".ljust(15)), flag=flagsC, border=2)
-        hbox.AddSpacer(5)
+        hbox.AddSpacer(2)
         self.trackCtrl = wx.ComboBox(
-            self, -1, choices=list(self.trackDict.keys()),size=(90, 22), style=wx.CB_READONLY)
+            self, -1, choices=list(self.trackDict.keys()),size=(80, 22), style=wx.CB_READONLY)
         self.trackCtrl.SetSelection(1)
         self.trackCtrl.Bind(wx.EVT_COMBOBOX, self.onTrackSel)
         hbox.Add(self.trackCtrl, flag=flagsR, border=2)
-        hbox.AddSpacer(5)
-        self.trackAcBt = wx.Button(self, label='ActiveTrack', size=(90, 22))
+        hbox.AddSpacer(2)
+        self.trackAcBt = wx.Button(self, label='ActiveTrack', size=(80, 22))
         self.trackAcBt.Bind(wx.EVT_BUTTON, self.onTrackAct)
         hbox.Add(self.trackAcBt, flag=flagsR, border=2)
-        hbox.AddSpacer(5)
-        self.trackEdBt = wx.Button(self, label='ReLoadTrack', size=(90, 22))
+        hbox.AddSpacer(2)
+        self.trackEdBt = wx.Button(self, label='ReLoadTrack', size=(80, 22))
         self.trackEdBt.Bind(wx.EVT_BUTTON, self.loadTrack)
         hbox.Add(self.trackEdBt, flag=flagsR, border=2)
-        hbox.AddSpacer(5)
-        self.trackStopBt = wx.Button(self, label='EmergencyStop', size=(90, 22))
+        hbox.AddSpacer(2)
+        self.trackStopBt = wx.Button(self, label='EmergencyStop', size=(100, 22))
         self.trackStopBt.SetBackgroundColour(wx.Colour('YELLOW'))
         self.trackStopBt.Bind(wx.EVT_BUTTON, self.onEmerg)
         hbox.Add(self.trackStopBt, flag=flagsR, border=2)
+        
+        self.contourEdBt = wx.Button(self, label='loadCont', size=(90, 22))
+        self.contourEdBt.Bind(wx.EVT_BUTTON, self.loadContour)
+        hbox.Add(self.contourEdBt, flag=flagsR, border=2)
+        
         mSizer.Add(hbox, flag=flagsR, border=2)
         mSizer.AddSpacer(5)
+
         # Row Idx 2: Track display area
         gs = wx.GridSizer(2, 8, 5, 5)
         gs.Add(wx.StaticText(self, label="Track:".ljust(14)),flag=flagsC, border=2)
@@ -223,6 +229,21 @@ class TrackCtrlPanel(wx.Panel):
         print("Loaded tracks from file: %s" %str (self.trackDict.keys()))
         if not event is None: 
             self.onTrackSel(None) # load the current selected track back.
+
+
+    def loadContour(self, event):
+        with wx.FileDialog(self, "Open contour file", wildcard=" contour files (*.json)|*.json",
+                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return     # the user changed their mind
+            # Proceed loading the file chosen by the user
+            pathname = fileDialog.GetPath()
+            try:
+                with open(pathname, 'r') as file:
+                    self.doLoadDataOrWhatever(file)
+            except IOError:
+                wx.LogError("Cannot open file '%s'." % pathname)
+
 
 #--TrackCtrlPanel--------------------------------------------------------------
     def onEmerg(self, event):

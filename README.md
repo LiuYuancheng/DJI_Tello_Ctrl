@@ -1,4 +1,4 @@
-# DJI_Tello_Control [Drone Firmware attack and detection]
+# DJI_Tello_Control [Drone Firmware Attack and Detection]
 
 **Program Design Purpose**: The objective of this cyber attack case study is to develop a workshop which use the terrain matching drone program and the firmware attestation algorithm introduced in paper [PAtt: Physics-based Attestation of Control Systems](https://www.usenix.org/system/files/raid2019-ghaeini.pdf)  for demonstrating the IoT/OT device firmware attack and the attack detection. The terrain matching drone is build by four distance sensors and DJI Tello Drone.
 
@@ -15,33 +15,69 @@
 This project contains two sections: 
 
 - DJI Tello Terrain Matching Drone Control 
-- 
+- Arduino Firmware Attestation
 
-##### **DJI Tello Terrain Matching Drone Control** 
+#### DJI Tello Terrain Matching Drone Control 
 
-In this project we add four additional distance detection sensor under a DJI Tello drone, then we use the Tello's bottom sensor and the 4 distance sensor to generate the drone bottom ground contour map, then our main drone controller will control the drone based on the contour map. For example, if we want the drone fly straight until detect a table sharp item under it, the drone will keep send the contour map to control program and if the program detect that the can match pre-saved table's feature, the control program will send the landing command to the drone.
+In this project we add four additional distance detection sensor under a DJI Tello drone, then we use the Tello's bottom sensor and the 4 distance sensors to generate the drone bottom ground contour map, then our main drone controller will control the drone based on the contour map. For example, if we want the drone fly straight until detect a table sharp item under it, the drone will keep send the contour map to control program and if the program detect that the can match pre-saved table's feature, the control program will send the landing command to the drone. A typical terrain matching process is shown below : 
 
 ![](doc/img/terrain_match.png)
 
+In this section we will also create a DJI Tello Drone controller program with the drone basic motion control, track editing function, ground simple contour matching function and drone motion safety check function for user to plan complex route for the drone to follow.
+
+#### Arduino Firmware Attestation
+
+In this section we will create a firmware program running on the ESP8266 Arduino to read the distances data from four HC-SR04 Ultrasonic Sensor to do the fly environment monitoring, terrain matching function. We will follow part of the PLC firmware attestation algorithm introduced in the paper "PATT" PATT: Physics-based Attestation of Control Systems (from Dr.Hamid Reza Ghaeini and Professor Jianying Zhou)  to verify whether the firmware attack has happened. We will follow the "Nonce Storage and Hash Computation" part introduced in the paper to dynamically calculate the firmware's hamming hash with the `k=4` as shown below :
+
+![](doc/img/paper.png)
+
+#### Key Tactics, techniques, and procedures (TTP) of the attack
+
+Based on the attack detailed road map above, there will be two kinds main TTP included in the firmware attack scenario : 
+
+##### Malicious Firmware Development
+
+- **Tactic:** Develop customized firmware with malicious functionality.
+- **Technique:** Modify existing firmware or create new firmware that includes backdoors, exploits, or other malicious code.
+- **Procedure:** The Red team attacker modified the normal drone's Terrain Matching unit's firmware by inserting malicious code into the firmware without detection, ensuring it remains hidden and does not trigger security mechanisms.
+
+##### Supply Chain Compromise
+
+- **Tactic:** Compromise the drone's firmware during the manufacturing or distribution process.
+- **Technique:** Infiltrate the supply chain to insert malicious firmware before the drone reaches end-users.
+- **Procedure:** The Red team build a fake software update server web site and send the link to the drone maintenance engineer via a fake drone firmware update email to introduce the compromised firmware into the supply chain. The web will also provide the Malicious Firmware's MD5 value for the maintenance engineer to do verify the unauthorized firmware update package. 
 
 
 
+------
+
+### Background Knowledge 
+
+Within this section, we aim to provide fundamental, general knowledge about each respective system and elucidate the Tactics, Techniques, and Procedures (TTP) associated with the attack vectors. This foundational information will serve as a primer for understanding the intricate details of the systems involved and the methodologies employed in the attack scenarios.
+
+#### Firmware Attack
+
+A **firmware attack** is any malicious code that enters your device by using a backdoor in the processor’s software. Backdoors are paths in the code, which allow certain individuals to bypass security and enter the system. The backdoor normally goes undetected due to its intense complexity, but can result in serious consequences if exploited by [hackers](https://netacea.com/blog/crackers-arent-hackers/).
+
+A common example of a firmware attack is an unauthorized update on your computer or phone that results in [malware](https://netacea.com/glossary/malware/) or some other form of cybercriminal activity. This is because many updates include backdoors with undocumented features or functions that can be used for adverse actions, such as intercepting data without notice and turning off core functionalities; all while still masquerading itself as an innocent update process.
+
+>  Reference link: https://netacea.com/glossary/firmware-attack/
 
 
 
+#### DJI Tello Drone Control and Terrain Matching 
+
+We installed four HC-SR04 Ultrasonic Sensors under a DJI Tello Drone (as shown below), then we use a ESP8266 Arduino's GPIO pin (D1, D2, D3 ns D4) to connect to the sensor's data positive (+) pin and connect all the sensor data negative/basic (-) pin to GPIO pin D0. Then use the Arduino to read the distance data and average the data to get a stable 4 points drone bottom area contour map every 0.5 second.
+
+![](doc/img/droneConnectrion.png)
+
+We also provide a control program with all the trojan flight control function. The  ESP8266 will send the 4 points drone bottom area contour map back to the control program and combine with the drone's bottom height sensor's reading, then we build a 5 points  drone bottom area contour map: 
+
+![](doc/img/TerrainMatching.png)
+
+Then the control will compare the final drone bottom area contour map with the its pre-saved contour map, if the different in under the threshold, then the control program will detect the "Terrain Matched", after the Terrain Matched last for 2 seconds, the control will send the preset the flight action time line (rout plat book) to the drone. (such as instruct the drone landing on the surface)
 
 
-In this section we will create a DJI Tello Drone controller program with the drone basic motion control, track editing function and drone motion safety check function. 
-
-
-
-
-
-
-
-##### **Arduino Firmware Attestation**
-
-In this section we will create a firmware program running on the ESP8266 Arduino to read the distances data from HC-SR04 Ultrasonic Sensor to do the fly environment monitoring, terrain matching function and provide the sensor firmware attestation function by using the "PATT"(PAtt: Physics-based Attestation of Control Systems) algorithm to confirm the firmware is not changed by attacker.  
 
 **Demo Link**: 
 
