@@ -1,6 +1,6 @@
 # DJI_Tello_Control [Drone Firmware Attack and Detection]
 
-**Program Design Purpose**: The objective of this cyber attack case study is to develop a workshop which use the terrain matching drone program and the firmware attestation algorithm introduced in paper [PAtt: Physics-based Attestation of Control Systems](https://www.usenix.org/system/files/raid2019-ghaeini.pdf)  for demonstrating the IoT/OT device firmware attack and the attack detection. The terrain matching drone is build by four distance sensors and DJI Tello Drone.
+**Program Design Purpose**: The objective of this cyber attack case study is to develop a workshop which use the terrain matching drone program and the firmware attestation algorithm introduced in paper [PAtt: Physics-based Attestation of Control Systems](https://www.usenix.org/system/files/raid2019-ghaeini.pdf)  for demonstrating the IoT/OT device firmware attack and the attack detection. The terrain matching drone is build by four distance sensors and DJI Tello Drone. The attack scenario will show Red team attack add in the malicious code in the firmware of the drone's Terrain contour generate unit, then mess up the drone's landing sequence and caused the drone crash happens. At the same time we will also show how the blue team defender use the PATT firmware attestation function to detect the firmware attack during the drone operation time and avoid the accident.
 
 **Attacker Vector** : Malicious Firmware Updates (OT), IoT Supply Chain Attacks
 
@@ -77,6 +77,8 @@ We also provide a control program with all the trojan flight control function. T
 
 Then the control will compare the final drone bottom area contour map with the its pre-saved contour map, if the different in under the threshold, then the control program will detect the "Terrain Matched", after the Terrain Matched last for 2 seconds, the control will send the preset the flight action time line (rout plat book) to the drone. (such as instruct the drone landing on the surface)
 
+During the attack demo, the red team attacker's target is the firmware of the ground contour generate unit, the attack will add malicious code in the distance sensor data reading part to add the random offset of the real data to mess up the ground contour generation result. Before the attack, the drone will fly straight until till find another table which match its pre-saved ground contour (identify as a safe landing plan) then land on the table. After the firmware attack, after messed up the ground contour generation result, a unsafe place's contour matrix data will be identify as a matching result, the the drone will try to land and crash. (As shown in the demo video) 
+
 
 
 **Demo Link**: 
@@ -100,6 +102,26 @@ The Two sensors doing terrain matching are mounted under the drone as shown belo
 ![](doc/img/sernsors.JPG)
 
 `version: v_0.2`
+
+
+
+Attack Scenario detail: 
+
+The red team attacker will follow below step to do the firmware attack
+
+The red team attacker download the normal firmware file `esp_client.ino.generic.bin` from authorized firmware server.  
+
+red team attacker user reverse engineer tool decompiled the binary to get part of the firmware C++ source code. 
+
+Then he analysis the code find the way to calculate the distance is we use the sensor generate a sound pulse, then measured the time interval between send the pulse and get the echo, then we multiple the time with the speed of sound and divided by 2. After he understand of the logic, the red team attacker added the malicious code in is as shown below: 
+
+![](doc/img/maliciousCode.png)
+
+After added the malicious code, the attacker repackage the fake firmware and send to the drone maintenance engineer via a fake ground contour generate unit firmware update email. 
+
+The maintenance engineer load the firmware to the ground contour generate unit, and he turn on the power and there some feedback data and as he didn't make the drone take off the distance data "looks" ok, so he thought the firmware is working normally which is actually not.
+
+The the drone user use the drone to do some task such as transfer some thing from one table to another table, when the drone take off, its ground contour generate unit keep generate fake distance data which caused the drone landing on the ground or crash. 
 
 
 
