@@ -82,6 +82,22 @@ Based on the attack detailed road map introduced in the attack demo section, the
 
 Within this section, we aim to provide fundamental, general knowledge about each respective system and elucidate the Tactics, Techniques, and Procedures (TTP) associated with the attack vectors. This foundational information will serve as a primer for understanding the intricate details of the systems involved and the methodologies employed in the attack scenarios.
 
+#### DJI Tello Drone Control and Terrain Matching 
+
+Before we introduce the attack technology background knowledge, we need to introduce the plant form we build for our attack case, the DJI Tello Drone Terrain Matching system.  
+
+To change a normal unprogrammable drone to be a "smart" drone. We installed four HC-SR04 Ultrasonic Sensors under the DJI Tello Drone (as shown below), then we use a ESP8266 Arduino's GPIO pin (`GPIO5-D1`, `GPIO4-D2`, `GPIO0-D3` and `GPIO2-D4`) to connect to the sensor's data positive (+) pin and connect all the sensor data negative/basic (-) pin to `GPIO16-D0`. Then the contour map generation code running on  Arduino will read the distance data and average the data to get a stable 4 points drone bottom area contour map every 0.5 second.
+
+![](doc/img/droneConnectrion.png)
+
+We also provide a control program with all the trojan flight control function. The  ESP8266 will send the 4 points drone bottom area contour map back to the control program and combine with the drone's bottom height sensor's reading, then we build a 5 points drone bottom area contour map as shown below: 
+
+![](doc/img/TerrainMatching.png)
+
+The drone controller's Terrain Matching module will compare the final drone bottom area contour map with its pre-saved contour map matrix, if the difference is under the threshold, then the control program will detect the "Terrain Matched", after the Terrain Matched last for 2 seconds, the control will send the pre-set the flight action time line (rout plat book) to the drone. (such as instruct the drone landing on the surface)
+
+
+
 #### Firmware Attack
 
 A **firmware attack** is any malicious code that enters your device by using a backdoor in the processor’s software. Backdoors are paths in the code, which allow certain individuals to bypass security and enter the system. The backdoor normally goes undetected due to its intense complexity, but can result in serious consequences if exploited by [hackers](https://netacea.com/blog/crackers-arent-hackers/).
@@ -90,21 +106,23 @@ A common example of a firmware attack is an unauthorized update on your computer
 
 >  Reference link: https://netacea.com/glossary/firmware-attack/
 
+During the attack demo, the red team attacker's target is the firmware of the ground contour generate unit (as shown in the pre-section), the attack will add malicious code in the distance sensor data reading part to add the random offset of the real data to mess up the ground contour generation result. Before the attack, the drone will fly straight until till find another table which match its pre-saved ground contour (identify as a safe landing plan) then land on the table. After the firmware attack, after messed up the ground contour generation result, a unsafe place's contour matrix data will be identify as a matching result, the the drone will try to land and crash. (As shown in the demo video) 
 
 
-#### DJI Tello Drone Control and Terrain Matching 
 
-We installed four HC-SR04 Ultrasonic Sensors under a DJI Tello Drone (as shown below), then we use a ESP8266 Arduino's GPIO pin (D1, D2, D3 ns D4) to connect to the sensor's data positive (+) pin and connect all the sensor data negative/basic (-) pin to GPIO pin D0. Then use the Arduino to read the distance data and average the data to get a stable 4 points drone bottom area contour map every 0.5 second.
+#### PAtt: Physics-based Attestation of Control Systems
 
-![](doc/img/droneConnectrion.png)
+PAtt is designed to allow remote attestation of logic code running on a PLC without a traditional trust anchor (such as a TPM or PUF), For the PAtt: Physics-based Attestation of Control Systems please refer to  Dr.Hamid Reza Ghaeini and Professor Jianying Zhou's Paper: https://www.usenix.org/system/files/raid2019-ghaeini.pdf
 
-We also provide a control program with all the trojan flight control function. The  ESP8266 will send the 4 points drone bottom area contour map back to the control program and combine with the drone's bottom height sensor's reading, then we build a 5 points  drone bottom area contour map: 
+In our project we followed We will follow the "Nonce Storage and Hash Computation" part introduced in the paper to dynamically calculate the firmware's hamming hash with the `k=4` to verify the firmware running on ESP8266 Arduino. 
 
-![](doc/img/TerrainMatching.png)
 
-Then the control will compare the final drone bottom area contour map with the its pre-saved contour map, if the different in under the threshold, then the control program will detect the "Terrain Matched", after the Terrain Matched last for 2 seconds, the control will send the preset the flight action time line (rout plat book) to the drone. (such as instruct the drone landing on the surface)
 
-During the attack demo, the red team attacker's target is the firmware of the ground contour generate unit, the attack will add malicious code in the distance sensor data reading part to add the random offset of the real data to mess up the ground contour generation result. Before the attack, the drone will fly straight until till find another table which match its pre-saved ground contour (identify as a safe landing plan) then land on the table. After the firmware attack, after messed up the ground contour generation result, a unsafe place's contour matrix data will be identify as a matching result, the the drone will try to land and crash. (As shown in the demo video) 
+------
+
+### System Design 
+
+In this section we will 
 
 
 
