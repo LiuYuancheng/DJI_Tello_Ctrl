@@ -1,8 +1,8 @@
-# DJI_Tello_Control [Drone Firmware Attack and Detection]
+# DJI_Tello_Control_System Cyber Attack Case Study [Drone Firmware Attack and Detection]
 
-**Program Design Purpose**: The objective of this cyber attack case study is to develop a workshop which uses the terrain matching drone program and the firmware attestation algorithm introduced in paper [PAtt: Physics-based Attestation of Control Systems](https://www.usenix.org/system/files/raid2019-ghaeini.pdf)  for demonstrating the IoT/OT device firmware attack and the attack detection. The terrain matching drone is built by four distance sensors and a DJI Tello Drone. The attack scenario will show red team attacker add in some malicious code in the firmware of the drone's terrain contour generate unit, then mess up the drone's landing process and caused the drone crash happen. At the same time we will also show how the blue team defenders use the PATT firmware attestation function to detect the firmware attack during the drone operation time and avoid the accident.
+**Program Design Purpose**: The objective of this cyber attack case study is aim to develop a workshop using the terrain-matching drone system and dynamic firmware attestation algorithm introduced in paper [PAtt: Physics-based Attestation of Control Systems](https://www.usenix.org/system/files/raid2019-ghaeini.pdf) to illustrate a practical demonstration of OT/IoT device firmware attack and the corresponding attack detection mechanisms. The terrain-matching drone is built by one Arduino, four distance sensors and one DJI Tello un-programable drone. The attack scenario involves a red team attacker injecting malicious code into the drone's terrain contour generation unit firmware, disrupting the drone auto landing process, and leading to a simulated drone crash. Simultaneously, the case study also showcases how blue team defenders employ the PATT firmware attestation function to identify the firmware attack in real-time, preventing the accident and highlighting the importance of robust defense mechanisms in securing operational technology and internet of things devices.
 
-**Attacker Vector** : Malicious Firmware Updates (OT), IoT Supply Chain Attacks
+**Attacker Vector** : Firmware Attack, Malicious Firmware Updates (OT), IoT Supply Chain Attacks
 
 > Important : The demonstrated attack case is used for education and training for different level of IT-OT cyber security ICS course, please don't apply it on any real world system.
 
@@ -12,35 +12,35 @@
 
 ### Introduction
 
-In this study case, we want to build a smart drone system which can simulate some special auto pilot task used in I4.0 such as auto tracing the route, sense environment (Terrain Matching)  and make decision of next task. Then we will show how a OT firmware attack will make influence of the system. This project contains three sections: 
+This case study aims to develop a smart drone system capable of emulating specific Industry 4.0 (I4.0) drone autopilot use case, including autonomously tracing routes, environment sensing (Terrain matching), transfer items and making decisions for subsequent actions. The objective is to demonstrate the potential impact of an Operational Technology (OT) firmware attack on such a system. The project is structured into three key sections:
 
-- **Attack Demo Platform**: DJI Tello Terrain Matching Drone Control System
-- **Firmware Attack demo**: Ground Contour Map Generator firmware attack demo
-- **Attack detection and defense**: Arduino Ground Contour Map Generator Unit Firmware Attestation
+- **Attack Demo Platform:** Utilizing the DJI Tello Terrain Matching Drone System as the foundation platform for showcasing autopilot functionalities, potential vulnerabilities and attack scenario.
+- **Firmware Attack Demonstration :** Focusing on a demonstration of a malicious firmware update attack targeting the drone's Ground Contour Map Generate Unit. This simulation will highlight the consequences of a malicious intrusion affecting the system's ability to perform tasks effectively.
+- **Attack Detection and Defense:** Implementing Physics-based Firmware Attestation as a means of illustrating how a robust defense mechanism can detect and mitigate the impact of a firmware attack. This section emphasizes the significance of proactive security measures in safeguarding drone systems within an Industry 4.0 context.
 
 
 
 #### DJI Tello Terrain Matching Drone Control 
 
-In this project we want to build a drone with some special function by using the DJI unprogrammable mini drone so it can simulate the industry drone's action such as follow the route and transfer items in the factory. The DJI Tello drone is a very basic version unprogrammable drone, so we will extend its function via adding more sensor on it to make it can "detect" more complex environment and use the computer to do the auto-pilot control.
+In this project, our aim is to enhance the capabilities of the DJI Tello mini drone, which is inherently unprogrammable, in order to simulate actions commonly performed by industry drones, such as following predefined routes and transporting items within a factory setting. The DJI Tello drone, being a basic unprogrammable model, requires additional features to emulate more complex tasks. To achieve this, we have integrated four additional ultrasonic sensors onto the drone, enhancing its ability to "detect" a more intricate environment. The autopilot control is executed by a main drone control program running on the connected computer.
 
-We added four additional distance detection sensors at the bottom of the DJI Tello drone, then we use the Tello's bottom sensor and the 4 distance sensors to generate the "5 points" drone bottom ground contour map. Our main drone controller(running on the control computer) will control the drone to simulate drone auto pilot and trace route based on the contour map data. For example, if we want the drone fly straight until detect a table sharp item under it then land on the the table (simulate drone transfer deliver item from one table to another table), the drone will keep send the contour map to control program and if the program detect that the send back contour matrix can match the program pre-saved table's feature, the control program will send the landing command to the drone. A typical terrain matching process is shown below : 
+The bottom sensor of the DJI Tello, along with the four added distance sensors, collaborates to generate a comprehensive "5 points" ground contour map of the drone's surroundings. The primary drone controller, housed on the control computer, orchestrates the drone's movements to simulate autopilot actions and follow predefined routes based on the acquired contour map data.
+
+The bottom sensor of the DJI Tello, along with the four added distance sensors, collaborates to generate a comprehensive "5 points" ground contour map of the drone's surroundings. The primary drone controller, housed on the control computer, orchestrates the drone's movements to simulate autopilot actions and follow predefined routes based on the acquired contour map data. For instance, if the objective is to make the drone fly straight until it detects an object resembling a table beneath it, and then proceed to land on that table (simulating the transfer of items from one table to another), the drone continually transmits the contour map to the control program. The drone control program analyzes the received contour matrix and if it matches the predefined features of a table, it will issue the landing command to the drone. The typical terrain matching process is illustrated below:
 
 ![](doc/img/terrain_match.png)
 
-In this section we will also show the DJI Tello Drone controller program with the drone basic motion control, track editing function, ground simple contour matching function and drone motion safety check function for user to plan complex route for the drone to follow.
+>  **Remark**: In the program design section of this document, we will provide a detailed overview of the DJI Tello Drone controller program. This comprehensive discussion will cover essential aspects, including the intricate usage of drone basic motion control, the functionality of track editing, the ground simple contour matching process, and the drone motion safety check function. This information is intended to empower users with the necessary insights and tools to plan and execute complex routes for the drone, ensuring a seamless and safe operation.
 
 
 
-#### Firmware Attack Demo
+#### Firmware Attack Demonstration 
 
-In this firmware attack case, the red team attacker's target is the  firmware program running on the drone's contour map generation unit which is used to do the fly environment monitoring, terrain matching function. . The contour map generation unit is build by a ESP8266 Arduino + a battery + four HC-SR04 Ultrasonic Sensors, the battery and Arduino are attached on the top of the drone and the 4 sensors are installed at the bottom of the drone. 
-
-The attack path is shown below : 
+In this malicious firmware updates attack scenario, the red team attacker's target is the firmware program running on the drone's CMGU (contour map generation unit).  CMGU is crucial for fly environment monitoring and terrain matching, it comprises an ESP8266 Arduino, a battery, and four HC-SR04 Ultrasonic Sensors. During the attack demo, the red team attacker did exploiting a vulnerability in the IoT supply chain, sent a deceptive firmware update email to a negligent drone maintenance engineer, resulting in the installation of the malicious firmware in the contour map generation unit. The attack underscores the critical importance of securing the IoT supply chain to prevent unauthorized firmware alterations and potential operational disruptions. The attack path is shown below : 
 
 ![](doc/img/attackPath.png)
 
-During the attack scenario, the attacker used one weak point of the IoT Supply Chain which send a fake firmware update email to a careless drone maintenance engineer and caused the malicious firmware be load in the drone's contour map generation unit. The malicious firmware will act normally if the user is do manual drone control or just auto follow the route, it will active when the drone start the auto pilot to do the ground contour matching. The firmware will random generate the "noisy" distance data to make ground contour information not accuracy, the incorrect contour matrix information will misleading the drone controller make wrong decision which will cause the drone accident such as crash. 
+The rogue firmware behaves inconspicuously during manual drone control or when following predefined routes. However, it activates malicious functionalities when the drone initiates autopilot mode for ground contour matching. Specifically, the firmware introduces random "noisy" distance data, deliberately distorting the accuracy of ground contour information. This misinformation misguides the drone controller, leading to incorrect decision-making and, consequently, drone accidents such as crashes. 
 
 > The detail demo video : https://youtu.be/rRu1qrZohJY?si=g5fkKZf4Z8Osre6I
 
@@ -48,13 +48,13 @@ During the attack scenario, the attacker used one weak point of the IoT Supply C
 
 #### Arduino Firmware Attestation
 
-In this section we will show because of the careless drone maintenance engineer the fake malware attack has happened, how a drone operator can use the dynamic running time firmware attestation to detect the attack and avoid the drone's accident happens.  
-
-We will follow part of the PLC firmware attestation algorithm introduced in the paper "PATT" PATT: Physics-based Attestation of Control Systems to verify whether the firmware attack has happened. We will follow the "Nonce Storage and Hash Computation" part introduced in the paper to dynamically calculate the firmware's hamming hash with the `k=4` as shown below :
+In this segment, we will illustrate how a drone operator can employ the dynamic, real-time firmware attestation to not only detect the attack but also prevent potential accidents involving the drone. To achieve this, we adopt a portion of the PLC firmware attestation algorithm outlined in the paper "PATT"( Physics-based Attestation of Control Systems) to verify whether the firmware attack has happened. We will follow the "Nonce Storage and Hash Computation" part introduced in the paper to dynamically calculate the firmware's hamming hash with the `k=4` as shown below :
 
 ![](doc/img/paper.png)
 
-We want to say many thanks for Dr.Hamid Reza Ghaeini and Professor Jianying Zhou from Singapore SUTD introduce the fast and robust attestation logic in the PATT: Physics-based Attestation of Control Systems paper. 
+It's essential to express our thanks for the Physics-based Attestation of Control Systems paper authors Dr.Hamid Reza Ghaeini and Professor Jianying Zhou from [SUTD](https://www.sutd.edu.sg/) for introducing the efficient and robust firmware attestation algorithm. 
+
+> Physics-based Attestation of Control Systems paper link: https://www.usenix.org/system/files/raid2019-ghaeini.pdf
 
 
 
@@ -66,13 +66,13 @@ Based on the attack detailed road map introduced in the attack demo section, the
 
 - **Tactic:** Develop customized firmware with malicious functionality.
 - **Technique:** Modify existing firmware or create new firmware that includes backdoors, exploits, or other malicious code.
-- **Procedure:** The red team attacker modified the normal drone's Terrain Matching unit's firmware by inserting malicious code into the firmware without detection, ensuring it remains hidden and does not trigger security mechanisms.
+- **Procedure:** The red team attacker modified the normal drone's terrain-matching unit's firmware by inserting malicious code into the firmware without detection, ensuring it remains hidden and does not trigger security mechanisms.
 
 ##### Supply Chain Compromise
 
 - **Tactic:** Compromise the drone's firmware during the manufacturing or distribution process.
 - **Technique:** Infiltrate the supply chain to insert malicious firmware before the drone reaches end-users.
-- **Procedure:** The Red team build a fake software update server web site and send the link to the drone maintenance engineer via a fake drone firmware update email to introduce the compromised firmware into the supply chain. The web will also provide the Malicious Firmware's MD5 value for the maintenance engineer to do verify the unauthorized firmware update package. 
+- **Procedure:** The red team attacker builds a fake software update server web site and send the link to the drone maintenance engineer via a deceptive drone firmware update email to introduce and inject the compromised firmware into the supply chain. The web will also provide the malicious firmware's MD5 value for the maintenance engineer to verify the unauthorized firmware update package. 
 
 
 
