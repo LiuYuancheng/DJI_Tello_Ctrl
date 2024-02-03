@@ -86,7 +86,7 @@ Within this section, we aim to provide fundamental, general knowledge about each
 
 Before we introduce the attack technology background knowledge, we need to introduce the plant form we build for our attack case, the DJI Tello Drone Terrain Matching system.  
 
-To change a normal unprogrammable drone to be a "smart" drone. We installed four HC-SR04 Ultrasonic Sensors under the DJI Tello Drone (as shown below), then we use a ESP8266 Arduino's GPIO pin (`GPIO5-D1`, `GPIO4-D2`, `GPIO0-D3` and `GPIO2-D4`) to connect to the sensor's data positive (+) pin and connect all the sensor data negative/basic (-) pin to `GPIO16-D0`. Then the contour map generation code running on  Arduino will read the distance data and average the data to get a stable 4 points drone bottom area contour map every 0.5 second.
+To change a normal unprogrammable drone to be a "smart" drone. We installed four HC-SR04 Ultrasonic Sensors under the DJI Tello Drone (as shown below), then we use a ESP8266 Arduino's GPIO pin (`GPIO5-D1`, `GPIO4-D2`, `GPIO0-D3` and `GPIO2-D4`) to connect to the sensor's data positive (+) pin. Then the contour map generation code running on  Arduino will read the distance data and average the data to get a stable 4 points drone bottom area contour map every 0.5 second.
 
 ![](doc/img/droneConnectrion.png)
 
@@ -122,35 +122,57 @@ In our project we followed We will follow the "Nonce Storage and Hash Computatio
 
 ### System Design 
 
-In this section we will 
+In this section we will introduce the design of the Drone control UI, The malicious code design and the 
+
+#### Drone Controller UI design 
+
+The drone controller user interface contents four main panel as shown below:
+
+![](doc/img/uidesign.png)
+
+The Drone control UI contents 6 different function panel: 
+
+- **Drone state panel** : Top panel of the UI to allow the drone operator to select drone, check the drone connection and battery state, the ground contour generate unit connection state, firmware attestation state and view the drone front camera. 
+- **Drone flight control panel** : Drone manual flight control panel to control the drone's vertical / horizontal movement , row pitch yaw adjustment, take off and landing and the camera on / off. 
+- **Drone autopilot control panel** : Panel for drone operator to control the drone to auto follow the pre-set rack, edit/load track config file, load the terrain matching config file, display the way point and auto action detail.  
+- **Ground contour generator info panel**: Panel to show all the drone's sensor feed back data and the Ground contour generate unit feed back data.
+- **PATT parameter config panel** : Panel for the drone operator to config the firmware PATT Hash calculation parameters and start one round attestation progress. 
+- **PATT result display panel** : panel to show attestation progress with a progress bar and show the local PATT Hash calculation result and the drone side firmware PATT Hash result when the attestation finished.
 
 
 
-**Demo Link**: 
+#### Communication Protocol Design 
 
-https://www.youtube.com/watch?v=rRu1qrZohJY
+The Drone control computer will connect to the drone via 2 WIFI link: 
 
-```
-[![Demo video](https://yt-embed.herokuapp.com/embed?v=rRu1qrZohJY)](https://www.youtube.com/watch?v=rRu1qrZohJY "Demo video ")
-```
+- **Drone communication link** : the drone provide a WIFI AP itself, so the controller will connect to the drone directly via WIFI to control the drone. 
+- **Ground contour generator link**: the ESP8266 Arduino's a WIFI module to connect to a WIFI AP, so the it will login to the WIFI router which connect to the control computer by Ethernet cable.
 
-##### Program Main UI View
+![](doc/img/connection.png)
 
-The main user interface to control the drone and check the sensor state is shown below:
+As shown in the above diagram, there are 4 wireless communication channel between the drone controller computer and the Drone. The control hub (Computer) will control with the drone by UDP and fetch the feedback data of Ground contour generator by TCP as shown below:
 
-![](doc/img/2019-10-18_123002.jpg)
+![](doc/img/port.png)
 
-##### Hardware View (Done with sensors installed)
+| Channel Name                          | Data flow                                                    | Target                     | Protocol       | Port  |
+| ------------------------------------- | ------------------------------------------------------------ | -------------------------- | -------------- | ----- |
+| Ground contour generator data channel | Fetch the ground contour matrix data from sensor             | Arduino_IP (192.168.1.101) | TCP            | 4000  |
+| Drone motion control channel          | Send drone flight controm Command & Receive Response         | Tello_Drone(192.168.10.1)  | UDP            | 8889  |
+| Drone sensor data channel             | Fetch drone built in bottom height sensor, flight sensor, battery , gyroscope data | Tello_Drone(192.168.10.1)  | UDP            | 8890  |
+| Drone Video channel                   | Drone front camera video                                     | Tello_Drone(192.168.10.1)  | UDP H264 video | 11111 |
 
-The Two sensors doing terrain matching are mounted under the drone as shown below:
+The gound contour generator firmware attestation communication shared the same channel with the Ground contour generator data channel, so when the attestation start, the Ground contour generation function will temporary paused and the channel will be used for transfer the PATT data. 
 
-![](doc/img/sernsors.JPG)
+| The program will connect to the Arduino by TCP and communicate with the drone by UDP |
+| ------------------------------------------------------------ |
+| **Arduino  Control**:  Arduino_IP: 192.168.1.101, TCP_PORT: 4000 <<- ->>  PC_IP: 192.168.1.100 TCP_PORT: 4000 |
+| **Drone Control** (Send Command & Receive Response):  Tello_IP: 192.168.10.1  UDP_PORT:8889  <<- ->>  PC/Mac/Mobile_IP: 192.168.10.xx UDP_PORT:8889 |
+| **Drone Control** (Receive Tello State): Tello_IP: 192.168.10.1  UDP_PORT:8890 ->>  PC/Mac/Mobile_ UDP_Server: 0.0.0.0, UDP PORT:8890 |
+| **Drone Control** (Receive Tello Video Stream) :  Tello_IP: 192.168.10.1, UDP_PORT:11111->>  PC/Mac/Mobile_UDP_Server: 0.0.0.0,  UDP_PORT:11111 |
 
-`version: v_0.2`
 
 
-
-Attack Scenario detail: 
+#### Design of Malicious Code and the Firmware Attack 
 
 The red team attacker will follow below step to do the firmware attack
 
@@ -161,6 +183,8 @@ red team attacker user reverse engineer tool decompiled the binary to get part o
 Then he analysis the code find the way to calculate the distance is we use the sensor generate a sound pulse, then measured the time interval between send the pulse and get the echo, then we multiple the time with the speed of sound and divided by 2. After he understand of the logic, the red team attacker added the malicious code in is as shown below: 
 
 ![](doc/img/maliciousCode.png)
+
+As shown in the malicious code the attacker added a random delay (0 ~300 microsec) before and after the pulse to make the echo time not consistent, then also add a random value (-3, 8) to the distance result make the final result have a random offset between -30cm to 80 cm. 
 
 After added the malicious code, the attacker repackage the fake firmware and send to the drone maintenance engineer via a fake ground contour generate unit firmware update email. 
 
@@ -212,20 +236,7 @@ We use DJI Tello Drone, ESP8266 Arduino and HC-SR04 Ultrasonic Sensor to build t
 
 ### System Design
 
-##### Communication Protocol 
 
-The control hub (Computer) will control with the drone by UDP and fetch the feedback data of the sensor by TCP:
-
-| The program will connect to the Arduino by TCP and communicate with the drone by UDP |
-| ------------------------------------------------------------ |
-| **Arduino  Control**:  Arduino_IP: 192.168.1.101, TCP_PORT: 4000 <<- ->>  PC_IP: 192.168.1.100 TCP_PORT: 4000 |
-| **Drone Control** (Send Command & Receive Response):  Tello_IP: 192.168.10.1  UDP_PORT:8889  <<- ->>  PC/Mac/Mobile_IP: 192.168.10.xx UDP_PORT:8889 |
-| **Drone Control** (Receive Tello State): Tello_IP: 192.168.10.1  UDP_PORT:8890 ->>  PC/Mac/Mobile_ UDP_Server: 0.0.0.0, UDP PORT:8890 |
-| Drone Control (Receive Tello Video Stream) :  Tello_IP: 192.168.10.1, UDP_PORT:11111->>  PC/Mac/Mobile_UDP_Server: 0.0.0.0,  UDP_PORT:11111 |
-
-**Communication detail diagram is shown below**: 
-
-![](doc/img/port.png)
 
 ###### WI-FI Connection Diagram
 
