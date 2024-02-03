@@ -122,7 +122,16 @@ In our project we followed We will follow the "Nonce Storage and Hash Computatio
 
 ### System Design 
 
-In this section we will introduce the design of the Drone control UI, The malicious code design and the 
+In this section we will introduce four main section design of the system:
+
+- Drone Controller UI design
+- Communication Protocol Design 
+- Design of Malicious Code and the Firmware Attack
+- Design of the Firmware Attestation 
+
+The drone controller main thread will start three parallel sub-threads to communicate with the Arduino to fetch the data and do the firmware attestation,read the Tello states data and get the Tello's UDP Video stream. The main thread will handle the Tello control.
+
+
 
 #### Drone Controller UI design 
 
@@ -188,9 +197,26 @@ As shown in the malicious code the attacker added a random delay (0 ~300 microse
 
 After added the malicious code, the attacker repackage the fake firmware and send to the drone maintenance engineer via a fake ground contour generate unit firmware update email. 
 
-The maintenance engineer load the firmware to the ground contour generate unit, and he turn on the power and there some feedback data and as he didn't make the drone take off the distance data "looks" ok, so he thought the firmware is working normally which is actually not.
+The maintenance engineer load the firmware to the ground contour generate unit, and he turn on the power and there some feedback data and as he didn't make the drone take off the distance data "looks" ok, so he thought the firmware is working normally which is actually not. As shown below,  the difference of the contour map send back to the controller :
 
-The the drone user use the drone to do some task such as transfer some thing from one table to another table, when the drone take off, its ground contour generate unit keep generate fake distance data which caused the drone landing on the ground or crash. 
+![](doc/img/attackCompare.png)
+
+When the drone operator uses the drone to do some task such as transfer some thing from one table to another table, when the drone take off, its ground contour generate unit keep generate fake distance data which caused the drone landing on the ground or crash. 
+
+
+
+#### Design of the Firmware Attestation 
+
+To verify the firmware, both the control computer side will keep a copy of valid firmware and simulate the firmware loading to memory which same as the Arduino. The detailed attestation steps are shown below: 
+
+- When we start to do the firmware attestation, the controller will fetch the firmware version and serial number from the Arduino. Based on the firmware version and serial number the control program will go to its data base to fetch the related firmware, firmware memory config and the random memory addresses list generation function from its data base.  
+- After fetched all the related information, the controller side will generate a "twin" memory map which is same as the target memory and load the firmware in the memory. After this prepare works done, it will create a random seed and send the seed to the Arduino. 
+- Both controller and the firmware side will used the same random seed and the random memory addresses list generation function to generate a random memory address list. After the list finished both controller side and the Arduino will calculate the Ham(a, b) for every address in the address list. Assume a address in the list is `0x7FFF5FBFFD98` "a" is the contents in from `0x7FFF5FBFFD98`  to `0x7FFF5FBFFD98+k` , after all the Ham(a,b) are calculated, we will combine all the Ham(a,b) together and get the hash value to do one round iteration. Based on the iteration parameter setting, after finish all the iteration,  all the hash value will combined together to generate the PATT checksum value. 
+- The Arduino will send back the PATT checksum back to the controller though the ground contour channel , if the send back checksum is same as the controller's checksum, the firmware attestation is passed, else firmware attack will be detected. 
+
+The main communication flow is shown below (System execution workflow UML diagram) :
+
+![](doc/img/workflow.png)
 
 
 
@@ -200,21 +226,17 @@ The the drone user use the drone to do some task such as transfer some thing fro
 
 ###### Development Environment
 
-> Python 3.7.4, C
+> Python 3.7.4, C++
 
 ###### Additional Lib Need
 
-1. wxPython 4.0.6 (need to install for UI building) 
-
-[wxPython]: https://wxpython.org/pages/downloads/index.html:	"wxPython"
+1. wxPython 4.0.6 (need to install for UI building) [> link](https://wxpython.org/pages/downloads/index.html:)
 
 ```
 pip install -U wxPython 
 ```
 
-2. OpenCV: opencv-python 4.1.1.26  (need to install to do the H264 video stream decode)
-
-[openCV on Wheel]: https://pypi.org/project/opencv-python/:	"OpenCV"
+2. OpenCV: opencv-python 4.1.1.26  (need to install to do the H264 video stream decode) [> link](https://pypi.org/project/opencv-python/)
 
 ```
 pip install opencv-python
@@ -226,29 +248,11 @@ We use DJI Tello Drone, ESP8266 Arduino and HC-SR04 Ultrasonic Sensor to build t
 
 ![](doc/img/item.jpg)
 
-[DJI Tello ]: https://www.ryzerobotics.com/tello/downloads	"DJI tello control SDK"
-[ESP8266 Arduino ]: https://arduino-esp8266.readthedocs.io/en/latest/	"ESP8266 Arduino dev doc"
-[HC-SR04 Ultrasonic Sensor ]: https://cdn.sparkfun.com/datasheets/Sensors/Proximity/HCSR04.pdf	"DJI tello control SDK"
+- **DJI Tello Drone** : DJI tello control SDK [> link ](https://www.ryzerobotics.com/tello/downloads ) 
+- **ESP8266 Arduino** : ESP8266 Arduino dev doc [> link](https://arduino-esp8266.readthedocs.io/en/latest/)
+- **HC-SR04 Ultrasonic Sensor** : Product features doc [> link](https://cdn.sparkfun.com/datasheets/Sensors/Proximity/HCSR04.pdf)
 
 
-
-------
-
-### System Design
-
-
-
-###### WI-FI Connection Diagram
-
-The Tello drone will connect the computer by WI-FI. The Arduino will connect to a router first then connect to the computer. The connection diagram is shown below: 
-
-![](doc/img/communicate.png)
-
-###### Program Executions Diagram
-
-The main thread will start three parallel sub-thread to communicate with the Arduino, read the Tello states data and get the Tello's UDP Video stream. The main thread will handle the Tello control. Program execution UML diagram: 
-
-![](doc/img/workflow.png)
 
 ##### Program File List 
 
@@ -286,9 +290,32 @@ After the program initialization finished, the below message will show in your t
 
 ![](doc/img/mainUI.png)
 
+##### Load the ground matric file
+
+To active the Terrain Matching function, the operate needs to change the config file's Terrain Matching flag to `True` after that when start the UI, the loading button will show up. Then Press the "loadCont" button the count file will pop up. 
+
+![](doc/img/loadContour.png)
+
+select the contour file you want to match, one simple contour example is shown below:
+
+```
+{
+	"sensorLF"	: [1.33, 1.23]	# The drone left front sensor reading 
+	"sensorLB"	: [1.33, 1.24] 	# the drone left back sensor reading	
+	"sensorMD"	: [1.12, 1.20]	# the fone mid height sensor reading
+	"sensorRF"	: [1.33, 1.23] 	# The drone right front sensor reading 
+	"sensorRB"	: [1.33, 1.24] 	# the drone right back sensor reading
+	"threshold" : 0.15			# matching threshod
+	"matchingT" : 2				# time to trigger matching (second)
+	"tackID"	: "trackLanding" # track to be executed after terrain matched.
+}
+```
+
 
 
 ##### Control the drone, sensor and do the firmware attestation
+
+The drone operator can do the attestation during the drone is flying, but we recommend drone operator do the attestation before the drone take off. The detailed step to do one attestation is shown below:
 
 1. Click the "**UAV Connect**" button under the title line, if the done responses correctly the "drone state" indicator in UI will change to green and the indicator will show "**UAV_Online**".
 
@@ -311,7 +338,7 @@ After the program initialization finished, the below message will show in your t
 
    - Fill attestation times you want to do and the memory block size, then press the "**startPatt**" button. The local firmware and the sensor firmware will be shown and compared. The attestation result and total time used for the attestation process will be shown as below (The attestation process will take about 8sec ~ 10 sec): 
 
-   - ![](doc/img/attestFail.jpg)
+   - ![](doc/img/attestationRst.png)
 
    - Every attestation result will be record in the "checkSumRecord.txt" (source folder) under format: 
 
@@ -320,8 +347,6 @@ After the program initialization finished, the below message will show in your t
      Local:`1400A0C126221302030000340C21865C1014050020C0313FBEE0CD0C0B073110FF0C02C174033F4010101C910C38FF7EFFEE0D210D012921020CE00E020012F0`
 
      Remote:`1400A0C126221302030000340C21865C1014050020C0313FBEE0CD0C0B073110FF0C02C174033F4010101C910C38FF7EFFEE0D210D012921020CE00E020012F0`
-
-     
 
 7. Press the '**>>**' button under the title bar the drone detail status information display window will pop-up on the right.
 
@@ -343,5 +368,5 @@ https://www.usenix.org/system/files/raid2019-ghaeini.pdf
 
 ------
 
-> Last edit by LiuYuancheng(liu_yuan_cheng@hotmail.com) at 29/01/2020
+> Last edit by LiuYuancheng(liu_yuan_cheng@hotmail.com) at 03/01/2024
 
