@@ -1,16 +1,24 @@
-# DJI_Tello_Control_System Cyber Attack Case Study [Drone Firmware Attack and Detection]
+# DJI_Tello_Control_System Cyber Attack Case Study [ Drone Firmware Attack and Detection ]
 
-**Program Design Purpose**: The objective of this cyber attack case study is aim to develop a workshop using the terrain-matching drone system and dynamic firmware attestation algorithm introduced in paper [PAtt: Physics-based Attestation of Control Systems](https://www.usenix.org/system/files/raid2019-ghaeini.pdf) to illustrate a practical demonstration of OT/IoT device firmware attack and the corresponding attack detection mechanisms. The terrain-matching drone is built by one Arduino, four distance sensors and one DJI Tello un-programable drone. The attack scenario involves a red team attacker injecting malicious code into the drone's terrain contour generation unit firmware, disrupting the drone auto landing process, and leading to a simulated drone crash. Simultaneously, the case study also showcases how blue team defenders employ the PATT firmware attestation function to identify the firmware attack in real-time, preventing the accident and highlighting the importance of robust defense mechanisms in securing operational technology and internet of things devices.
+**Project Design Purpose**: The objective of this cyber attack case study is aim to develop a workshop using the terrain-matching drone system we developed and dynamic firmware attestation algorithm introduced in paper [PAtt: Physics-based Attestation of Control Systems](https://www.usenix.org/system/files/raid2019-ghaeini.pdf) to illustrate a practical demonstration of OT/IoT device firmware attack and the corresponding attack detection mechanisms. The terrain-matching drone is built by one Arduino, four distance sensors and one DJI Tello un-programable drone. The attack scenario involves a red team attacker injecting malicious code into the drone's terrain contour generation unit firmware, disrupting the drone auto landing process, and leading to a simulated drone crash. Simultaneously, the case study also showcases how blue team defenders employ the PATT firmware attestation function to identify the firmware attack in real-time, preventing the accident and highlighting the importance of robust defense mechanisms in securing operational technology and internet of things devices. The attack and detection workflow is shown below:
 
 ![](doc/img/overview.png)
+
+`version v0.2.1`
 
 **Attacker Vector** : Firmware Attack, Malicious Firmware Updates (OT), IoT Supply Chain Attacks
 
 > Important : The demonstrated attack case is used for education and training for different level of IT-OT cyber security ICS course, please don't apply it on any real world system.
 
-[TOC]
+```
+version:     v0.2.1
+Copyright:   Copyright (c) 2022 LiuYuancheng
+License:     MIT License  
+```
 
 **Table of Contents**
+
+[TOC]
 
 - [DJI_Tello_Control_System Cyber Attack Case Study [Drone Firmware Attack and Detection]](#dji-tello-control-system-cyber-attack-case-study--drone-firmware-attack-and-detection-)
     + [Introduction](#introduction)
@@ -31,8 +39,9 @@
       - [Design of the Firmware Attestation](#design-of-the-firmware-attestation)
     + [Program Setup](#program-setup)
           + [Development Environment](#development-environment)
-          + [Additional Lib Need](#additional-lib-need)
-          + [Hardware Need](#hardware-need)
+              + [Additional Lib Need](#additional-lib-need)
+              + [Hardware Need](#hardware-need)
+      
         * [Program File List](#program-file-list)
     + [Program Usage/Execution](#program-usage-execution)
         * [Run the Program](#run-the-program)
@@ -47,17 +56,17 @@
 
 ### Introduction
 
-This case study aims to develop a smart drone system capable of emulating specific Industry 4.0 (I4.0) drone autopilot use case, including autonomously tracing routes, environment sensing (Terrain matching), transfer items and making decisions for subsequent actions. The objective is to demonstrate the potential impact of an Operational Technology (OT) firmware attack on such a system. The project is structured into three key sections:
+This case study aims to develop a smart drone system capable of simulating specific Industry 4.0 (I4.0) drone autopilot use case, including autonomously tracing routes, environment sensing (Terrain matching), transfer items and making decisions for subsequent actions. The objective is to demonstrate the potential impact of an Operational Technology (OT) firmware attack on such a system. The project is structured into three key sections:
 
 - **Attack Demo Platform:** Utilizing the DJI Tello Terrain Matching Drone System as the foundation platform for showcasing autopilot functionalities, potential vulnerabilities and attack scenario.
 - **Firmware Attack Demonstration :** Focusing on a demonstration of a malicious firmware update attack targeting the drone's Ground Contour Map Generate Unit. This simulation will highlight the consequences of a malicious intrusion affecting the system's ability to perform tasks effectively.
-- **Attack Detection and Defense:** Implementing Physics-based Firmware Attestation as a means of illustrating how a robust defense mechanism can detect and mitigate the impact of a firmware attack. This section emphasizes the significance of proactive security measures in safeguarding drone systems within an Industry 4.0 context.
+- **Attack Detection and Defense:** Implementing Physics-based Firmware Attestation(PATT) as a means of illustrating how a robust defense mechanism can detect and mitigate the impact of a firmware attack. This section emphasizes the significance of proactive security measures in safeguarding drone systems within an Industry 4.0 context.
 
 
 
 #### DJI Tello Terrain Matching Drone Control 
 
-In this project, our aim is to enhance the capabilities of the DJI Tello mini drone, which is inherently unprogrammable, in order to simulate actions commonly performed by industry drones, such as following predefined routes and transporting items within a factory setting. The DJI Tello drone, being a basic unprogrammable model, requires additional features to emulate more complex tasks. To achieve this, we have integrated four additional ultrasonic sensors onto the drone, enhancing its ability to "detect" a more intricate environment. The autopilot control is executed by a main drone control program running on the connected computer.
+In this project, our aim is to enhance the capabilities of the DJI Tello mini drone (which is inherently unprogrammable), in order to simulate actions commonly performed by industry drones, such as following predefined routes and transporting items within a factory setting. The DJI Tello drone, being a basic unprogrammable model, requires additional features to emulate more complex tasks. To achieve this, we have integrated four additional ultrasonic sensors onto the drone, enhancing its ability to "detect" a more intricate environment. The autopilot control is executed by a main drone control program running on the connected computer.
 
 The bottom sensor of the DJI Tello, along with the four added distance sensors, collaborates to generate a comprehensive "5 points" ground contour map of the drone's surroundings. The primary drone controller, housed on the control computer, orchestrates the drone's movements to simulate autopilot actions and follow predefined routes based on the acquired contour map data.
 
@@ -166,7 +175,7 @@ Within this section, we will outline the design of the system, comprising four k
 
 
 
-#### Drone Controller UI design 
+#### Drone Controller UI Design 
 
 The Drone controller encompasses distinct function panels designed to empower the drone operator with comprehensive control over the drone's flight. It facilitates the setting of flight routes, loading of terrain matching configuration files, and monitoring of the contour generation unit data. The main thread of the drone controller initiates three parallel sub-threads, each dedicated to vital tasks—communicating with the Arduino for data retrieval and firmware attestation, reading Tello-Drone states data, and obtaining the Tello's UDP video stream. Simultaneously, the main thread manages Tello flight control. The Drone controller's user interface features six primary panels, detailed below:
 
@@ -261,11 +270,11 @@ The main communication flow is shown below (System execution workflow UML diagra
 
 ### Program Setup
 
-###### Development Environment
+##### Development Environment
 
 > Python 3.7.4, C++
 
-###### Additional Lib Need
+##### Additional Lib Need
 
 1. wxPython 4.0.6 (need to install for UI building) [> link](https://wxpython.org/pages/downloads/index.html:)
 
@@ -279,7 +288,7 @@ pip install -U wxPython
 pip install opencv-python
 ```
 
-###### Hardware Need
+##### Hardware Need
 
 We use DJI Tello Drone, ESP8266 Arduino and HC-SR04 Ultrasonic Sensor to build the system: 
 
@@ -407,5 +416,5 @@ https://www.usenix.org/system/files/raid2019-ghaeini.pdf
 
 ------
 
-> Last edit by LiuYuancheng(liu_yuan_cheng@hotmail.com) at 03/01/2024
+> Last edit by LiuYuancheng(liu_yuan_cheng@hotmail.com) at 03/01/2024, , if you have any problem please free to message me.
 
