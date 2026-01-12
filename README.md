@@ -10,10 +10,12 @@
 
 > Important : The demonstrated attack case is used for education and training for different level of IT-OT cyber security ICS course, please don't apply it on any real world system.
 
-```
-version:     v0.2.1
-Copyright:   Copyright (c) 2022 LiuYuancheng
-License:     MIT License  
+```python
+# Author:      Yuancheng Liu
+# Created:     2022/12/20
+# version:     v0.2.1
+# Copyright:   Copyright (c) 2022 LiuYuancheng
+# License:     MIT License  
 ```
 
 **Table of Contents**
@@ -412,9 +414,13 @@ PATT firmware attestation:
 
 https://www.usenix.org/system/files/raid2019-ghaeini.pdf
 
+If you are also interested about other OT attack case study on railway system, please refer to below links:
 
+1. [Case Study 1: False Data/Command Injection Attack](https://www.linkedin.com/pulse/ot-cyber-attack-workshop-case-study-01-false-data-command-liu-hqtac%3FtrackingId=28DxJBLUTguN0Q8tJUDMiQ%3D%3D/?trackingId=28DxJBLUTguN0Q8tJUDMiQ%3D%3D)
+2. [Case Study 2: OT-Network ARP Spoofing Attack](https://www.linkedin.com/pulse/ot-cyber-attack-workshop-case-study-02-arp-spoofing-hmi-yuancheng-liu-howzc%3FtrackingId=LuDJ7ZceQZ2t3HpUGkqCYA%3D%3D/?trackingId=LuDJ7ZceQZ2t3HpUGkqCYA%3D%3D)
+3. [Case Study 3: DDoS on Modbus Channel Attack](https://www.linkedin.com/pulse/ot-cyber-attack-workshop-case-study-03-ddos-plc-yuancheng-liu-yi2cc%3FtrackingId=%2FouNxvl8RLWQNWo53N6fdw%3D%3D/?trackingId=%2FouNxvl8RLWQNWo53N6fdw%3D%3D)
+4. [Case Study 4: Man-in-the-Middle Attack on HMI-PLC Control Chain](https://www.linkedin.com/pulse/ot-cyber-attack-workshop-case-study-04-mitm-hmi-plc-control-liu-wcobc%3FtrackingId=RcBsdjWWRrOS576fT3y8%2Bg%3D%3D/?trackingId=RcBsdjWWRrOS576fT3y8%2Bg%3D%3D)
 
 ------
 
 > Last edit by LiuYuancheng(liu_yuan_cheng@hotmail.com) at 03/01/2024, , if you have any problem please free to message me.
-
