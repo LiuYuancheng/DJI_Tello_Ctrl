@@ -24,37 +24,34 @@
 
 [TOC]
 
-- [DJI_Tello_Control_System Cyber Attack Case Study [Drone Firmware Attack and Detection]](#dji-tello-control-system-cyber-attack-case-study--drone-firmware-attack-and-detection-)
-    + [Introduction](#introduction)
-      - [DJI Tello Terrain Matching Drone Control](#dji-tello-terrain-matching-drone-control)
-      - [Firmware Attack Demonstration](#firmware-attack-demonstration)
-      - [Arduino Firmware Attestation](#arduino-firmware-attestation)
-      - [Key Tactics, techniques, and procedures (TTP) of the attack](#key-tactics--techniques--and-procedures--ttp--of-the-attack)
-        * [Malicious Firmware Development](#malicious-firmware-development)
-        * [Supply Chain Compromise](#supply-chain-compromise)
-    + [Background Knowledge](#background-knowledge)
-      - [DJI Tello Drone Control and Terrain Matching](#dji-tello-drone-control-and-terrain-matching)
-      - [OT/IoT Firmware Attack](#ot-iot-firmware-attack)
-      - [PAtt: Physics-based Attestation of Control Systems](#patt--physics-based-attestation-of-control-systems)
-    + [System Design](#system-design)
-      - [Drone Controller UI design](#drone-controller-ui-design)
-      - [Communication Protocol Design](#communication-protocol-design)
-      - [Design of Malicious Code and the Firmware Attack](#design-of-malicious-code-and-the-firmware-attack)
-      - [Design of the Firmware Attestation](#design-of-the-firmware-attestation)
-    + [Program Setup](#program-setup)
-          + [Development Environment](#development-environment)
-              + [Additional Lib Need](#additional-lib-need)
-              + [Hardware Need](#hardware-need)
-      
-        * [Program File List](#program-file-list)
-    + [Program Usage/Execution](#program-usage-execution)
-        * [Run the Program](#run-the-program)
-        * [Load the ground matrix file](#load-the-ground-matrix-file)
-        * [Drone Control and PATT firmware attestation](#drone-control-and-patt-firmware-attestation)
-    + [Problem and Solution](#problem-and-solution)
-    + [Reference](#reference)
-
-
+- [DJI_Tello_Control_System Cyber Attack Case Study [ Drone Firmware Attack and Detection ]](#dji-tello-control-system-cyber-attack-case-study---drone-firmware-attack-and-detection--)
+    + [1. Introduction](#1-introduction)
+      - [1.1 DJI Tello Terrain Matching Drone Control](#11-dji-tello-terrain-matching-drone-control)
+      - [1.2 Firmware Attack Demonstration](#12-firmware-attack-demonstration)
+      - [1.3 Arduino Firmware Attestation](#13-arduino-firmware-attestation)
+      - [1.4 Key Tactics, techniques, and procedures (TTP) of the attack](#14-key-tactics--techniques--and-procedures--ttp--of-the-attack)
+        * [1.4.1 Malicious Firmware Development](#141-malicious-firmware-development)
+        * [1.4.2 Supply Chain Compromise](#142-supply-chain-compromise)
+    + [2. Background Knowledge](#2-background-knowledge)
+      - [2.1 DJI Tello Drone Control and Terrain Matching](#21-dji-tello-drone-control-and-terrain-matching)
+      - [2.1 OT/IoT Firmware Attack](#21-ot-iot-firmware-attack)
+      - [2.2 PAtt: Physics-based Attestation of Control Systems](#22-patt--physics-based-attestation-of-control-systems)
+    + [3. System Design](#3-system-design)
+      - [3.1 Drone Controller UI Design](#31-drone-controller-ui-design)
+      - [3.2 Communication Protocol Design](#32-communication-protocol-design)
+      - [3.3 Design of Malicious Code and the Firmware Attack](#33-design-of-malicious-code-and-the-firmware-attack)
+      - [3.4 Design of the Firmware Attestation](#34-design-of-the-firmware-attestation)
+    + [4. Program Setup](#4-program-setup)
+        * [4.1.1 Development Environment](#411-development-environment)
+        * [4.1.2 Additional Lib Need](#412-additional-lib-need)
+        * [4.1.3 Hardware Need](#413-hardware-need)
+        * [4.1.4 Program File List](#414-program-file-list)
+    + [5 Program Usage/Execution](#5-program-usage-execution)
+        * [5.1.1 Run the Program](#511-run-the-program)
+        * [5.1.2 Load the ground matrix file](#512-load-the-ground-matrix-file)
+        * [5.1.3 Drone Control and PATT firmware attestation](#513-drone-control-and-patt-firmware-attestation)
+    + [6. Problem and Solution](#6-problem-and-solution)
+    + [7. Reference](#7-reference)
 
 ------
 
@@ -126,11 +123,11 @@ Based on the attack detailed road map introduced in the attack demo section, the
 
 ------
 
-### Background Knowledge 
+### 2. Background Knowledge 
 
 Within this section, we aim to provide fundamental, general knowledge about each respective system and elucidate the Tactics, Techniques, and Procedures (TTP) associated with the attack vectors. This foundational information will serve as a primer for understanding the intricate details of the systems involved and the methodologies employed in the attack scenarios.
 
-#### DJI Tello Drone Control and Terrain Matching 
+#### 2.1 DJI Tello Drone Control and Terrain Matching 
 
 Before delving into the technical aspects of the attack, it's essential to provide an overview of the platform utilized in our case—the DJI Tello Drone Terrain Matching system.
 
@@ -146,7 +143,7 @@ The Terrain Matching module within the drone controller meticulously scrutinizes
 
 
 
-#### OT/IoT Firmware Attack
+#### 2.1 OT/IoT Firmware Attack
 
 A **firmware attack** is any malicious code that enters your device by using a backdoor in the processor’s software. Backdoors are paths in the code, which allow certain individuals to bypass security and enter the system. The backdoor normally goes undetected due to its intense complexity, but can result in serious consequences if exploited by [hackers](https://netacea.com/blog/crackers-arent-hackers/).
 
@@ -158,7 +155,7 @@ In the course of the attack demonstration, the red team attacker's focus is on t
 
 
 
-#### PAtt: Physics-based Attestation of Control Systems
+#### 2.2 PAtt: Physics-based Attestation of Control Systems
 
 PAtt is designed to do the remote firmware attestation of logic code running on a PLC without a traditional trust anchor (such as a TPM or PUF). For the PAtt: Physics-based Attestation of Control Systems please refer to  Dr.Hamid Reza Ghaeini and Professor Jianying Zhou's Paper: https://www.usenix.org/system/files/raid2019-ghaeini.pdf
 
@@ -168,7 +165,7 @@ In our project we followed the idea of "Nonce Storage and Hash Computation" intr
 
 ------
 
-### System Design 
+### 3. System Design 
 
 Within this section, we will outline the design of the system, comprising four key components:
 
@@ -179,7 +176,7 @@ Within this section, we will outline the design of the system, comprising four k
 
 
 
-#### Drone Controller UI Design 
+#### 3.1 Drone Controller UI Design 
 
 The Drone controller encompasses distinct function panels designed to empower the drone operator with comprehensive control over the drone's flight. It facilitates the setting of flight routes, loading of terrain matching configuration files, and monitoring of the contour generation unit data. The main thread of the drone controller initiates three parallel sub-threads, each dedicated to vital tasks—communicating with the Arduino for data retrieval and firmware attestation, reading Tello-Drone states data, and obtaining the Tello's UDP video stream. Simultaneously, the main thread manages Tello flight control. The Drone controller's user interface features six primary panels, detailed below:
 
@@ -196,7 +193,7 @@ The Drone control UI contents 6 different function panels :
 
 
 
-#### Communication Protocol Design 
+#### 3.2 Communication Protocol Design 
 
 The drone control computer establishes connectivity with the drone through two distinct WIFI links:
 
@@ -231,7 +228,7 @@ The ground contour generator firmware attestation communication shares the same 
 
 
 
-#### Design of Malicious Code and the Firmware Attack 
+#### 3.3 Design of Malicious Code and the Firmware Attack 
 
 The red team attacker follows the steps outlined below to execute the firmware attack:
 
@@ -255,7 +252,7 @@ During operational tasks where the drone is tasked with transferring items from 
 
 
 
-#### Design of the Firmware Attestation 
+#### 3.4 Design of the Firmware Attestation 
 
 To verify the firmware,  the control computer side will also keep firmware repository which contents copy of valid different version firmware and simulate the firmware loading to memory which same as the Arduino. The detailed attestation steps are outlined below:
 
@@ -272,13 +269,13 @@ The main communication flow is shown below (System execution workflow UML diagra
 
 ------
 
-### Program Setup
+### 4. Program Setup
 
-##### Development Environment
+##### 4.1.1 Development Environment
 
 > Python 3.7.4, C++
 
-##### Additional Lib Need
+##### 4.1.2 Additional Lib Need
 
 1. wxPython 4.0.6 (need to install for UI building) [> link](https://wxpython.org/pages/downloads/index.html:)
 
@@ -292,7 +289,7 @@ pip install -U wxPython
 pip install opencv-python
 ```
 
-##### Hardware Need
+##### 4.1.3 Hardware Need
 
 We use DJI Tello Drone, ESP8266 Arduino and HC-SR04 Ultrasonic Sensor to build the system: 
 
@@ -302,9 +299,7 @@ We use DJI Tello Drone, ESP8266 Arduino and HC-SR04 Ultrasonic Sensor to build t
 - **ESP8266 Arduino** : ESP8266 Arduino dev doc [> link](https://arduino-esp8266.readthedocs.io/en/latest/)
 - **HC-SR04 Ultrasonic Sensor** : Product features doc [> link](https://cdn.sparkfun.com/datasheets/Sensors/Proximity/HCSR04.pdf)
 
-
-
-##### Program File List 
+##### 4.1.4 Program File List 
 
 | Program File          | Execution Env | Description                                                  |
 | --------------------- | ------------- | ------------------------------------------------------------ |
@@ -320,9 +315,9 @@ We use DJI Tello Drone, ESP8266 Arduino and HC-SR04 Ultrasonic Sensor to build t
 
 ------
 
-### Program Usage/Execution
+### 5 Program Usage/Execution
 
-##### Run the Program
+##### 5.1.1 Run the Program
 
 Follow the section "WIFI Connection Diagram" to connect to the sensor and drone to your computer. Then execute the program telloRun.py under `src` folder by the below command: 
 
@@ -340,7 +335,7 @@ After the program initialization finished, the below message will show in your t
 
 ![](doc/img/mainUI.png)
 
-##### Load the ground matrix file
+##### 5.1.2 Load the ground matrix file
 
 To active the Terrain Matching function, the drone operator needs to change the config file's `Terrain Matching Flag` to `True` after that when start the UI, the loading button will show up. Then Press the "loadCont" button  and the count file selection dialog will pop up as shown below : 
 
@@ -363,7 +358,7 @@ Then select the contour JSON file you want the drone to match during track the r
 
 
 
-##### Drone Control and PATT firmware attestation
+##### 5.1.3 Drone Control and PATT firmware attestation
 
 The drone operator can do the firmware attestation during the drone is flying, but we recommend drone operator do the attestation before the drone take off. The detailed step to do one attestation is shown below:
 
@@ -404,13 +399,13 @@ The drone operator can do the firmware attestation during the drone is flying, b
 
 ------
 
-### Problem and Solution
+### 6. Problem and Solution
 
 N.A
 
 ------
 
-### Reference
+### 7. Reference
 
 PATT firmware attestation: 
 
